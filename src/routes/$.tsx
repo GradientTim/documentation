@@ -52,10 +52,10 @@ function Content({ path }: { path: string }) {
 
   const plainMarkdownUrl = page.info.path.replace(/\.mdx$/, '.md')
 
-  const lastModified = 'lastModified' in page ? (page.lastModified as string) : undefined
+  const lastModified = page.lastModified
 
   return (
-    <DocsPage toc={toc}>
+    <DocsPage toc={toc} breadcrumb={{ enabled: false }}>
       <DocsTitle>{page.title}</DocsTitle>
       <DocsDescription>{page.description}</DocsDescription>
 
@@ -71,7 +71,7 @@ function Content({ path }: { path: string }) {
         <MDX components={useMDXComponents()} />
       </DocsBody>
 
-      {lastModified && <PageLastUpdate date={new Date(lastModified)} />}
+      {lastModified && <PageLastUpdate date={lastModified} />}
     </DocsPage>
   )
 }

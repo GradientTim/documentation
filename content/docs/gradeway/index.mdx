@@ -1,0 +1,78 @@
+---
+title: Gradeway
+description: A Minecraft permission gateway.
+---
+
+## Why another permission system?
+
+Gradeway was developed primarily to prioritize on database design and developer-friendly implementation.
+
+A permission system that is straightforward to use for everyone, whether you are a server administrator or a beginner/advanced developer.
+
+**More reasons missing / incomplete in other permission systems**:
+
+- The primary focus of relational databases, which make it easier to manage indexing, querying, and relationships.
+- A clear, developer-friendly API integration that is easy to understand without the need for web documentation.
+- Management of player roles that are time-based and/or can be paused at any time.
+- A central location for bundling permissions and assigning them directly to players and/or roles, rather than assigning each permission individually.
+
+## Use this if ...
+
+- You want your permissions backed by a **relational database** (indexing, querying, joins).
+- You want to call a **clean, typed API** without digging through web docs.
+- You need **time-based roles**, such as _trials_, _subscriptions_, or _VIP periods_ that expire on their own.
+- You want to **pause a role** without deleting it, e.g., suspend a donor perk during a rule violation, then restore it.
+- You want to bundle a set of permissions into a **template** and assign that to **players or roles at once**, instead of granting permissions one at a time.
+
+## Questions and Answers
+
+**1. Why aren't human-readable file data formats (YAML, JSON, etc.) supported?**
+
+- The relational database schema makes data management much easier and also allows third-party plugins to use the data directly without having to manage the schema of the human-readable data.
+
+**2. Which databases does Gradeway support?**
+
+- _H2_, _MariaDB_, _MySQL_, _Oracle_, _PostgreSQL_, _SQLite_ and _SQLServer_.
+
+**3. Can I migrate from other permission systems?**
+
+- Yes, Gradeway currently supports migration from _LuckPerms_.
+
+**4. Does Gradeway work across a network of servers?**
+
+- Yes. An optional messaging broker syncs data across instances as soon as it changes on one of them. Data is also cached for a few minutes and refetched directly from the database afterwards.
+
+**5. Which platforms are supported?**
+
+- Server: _Paper_, _Bukkit_,
+- Proxy: _Velocity_, _BungeeCord_
+
+<Callout type="idea">
+  The focus until **v1.0.0** is on **server/proxy plugins** to improve and focus Gradeway on one side.
+
+When Gradeway is ready for general use, there will be also support for client-side mods.
+
+</Callout>
+
+**6. Can non-developers (server admins) manage players, roles, and permissions without touching the api?**
+
+- Yes, Gradeway provides in-game commands for managing everything from players to roles and permissions.
+
+**7. Is Gradeway free and open-source?**
+
+- Sure, **always** free and [open-source](https://github.com/GradientTim/gradeway) :)
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Administrator Installation"
+    description="Learn how to install Gradeway on your server."
+    href="/gradeway/admin/install"
+  />
+  <Card
+    title="Developer Installation"
+    description="Learn how to use Gradeway in your codebase."
+    href="/gradeway/dev/install"
+  />
+</Cards>

@@ -1,0 +1,50 @@
+---
+title: Usage
+---
+
+## Static Access
+
+The Gradeway interface includes two functions: `Gradeway#getOrNull` and `Gradeway#getOrThrow`.
+The Gradeway instance may be null if the global Koin context or the Gradeway instance itself has not yet been initialized.
+
+```kotlin
+import dev.gradienttim.gradeway.Gradeway
+
+val gradeway = Gradeway.getOrNull()
+// val gradeway = Gradeway.getOrThrow() // returns a non-nullable instance.
+```
+
+## Dependency Injection
+
+The Koin dependency injection library is already integrated into the Gradeway API and can be easily used as follows:
+
+```kotlin
+import dev.gradienttim.gradeway.Gradeway
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class MyClass : KoinComponent {
+    val gradeway: Gradeway by inject()
+}
+```
+
+## Accessing the Lifecycle
+
+The `Gradeway` instance gives you basic access to Gradeway features such as **players**, **roles**, **permissions**, **groups** and **attributes**.
+In addition to this instance, there is also a Lifecycle instance that includes additional features, but you will probably rarely need to use it.
+
+The Lifecycle instance contains some internal management functions that are not strictly necessary for normal use of the API. **Please use this with caution.**
+
+```kotlin
+import dev.gradienttim.gradeway.Gradeway
+import dev.gradienttim.gradeway.GradewayLifecycle
+
+val gradeway = Gradeway.getOrThrow() as GradewayLifecycle
+
+val state = gradeway.state // can be LOADED, UNLOADED or PROCESSING
+
+gradeway.logger.info("Hello from GradewayLifecycle!")
+
+// imagine calling this every second...
+gradeway.caches.invalidateAll()
+```

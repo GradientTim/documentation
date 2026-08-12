@@ -1,0 +1,6 @@
+{
+  "title": "Gradeway",
+  "description": "A Minecraft permission gateway",
+  "icon": "asset:gradeway",
+  "root": true
+}

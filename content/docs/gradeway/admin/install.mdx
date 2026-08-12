@@ -1,0 +1,74 @@
+---
+title: Installation
+description: A guide on how to correctly install Gradeway as a server administrator.
+---
+
+### Download the Plugin [step]
+
+Download Gradeway from one of the following sources for your version and platform and place the **.jar** file in the **plugins** folder on the server or proxy.
+
+- [Modrinth](https://modrinth.com/project/gradeway)
+- [Hangar](https://hangar.papermc.io/GradientTim/gradeway)
+- [GitHub Releases](https://github.com/GradientTim/gradeway/releases)
+
+### Start the server / proxy [step]
+
+Now start your server or proxy and **wait** until Gradeway has finished loading.
+Configuration files and folders will be created in the `plugins/gradeway` directory.
+
+Once Gradeway finishes loading, you'll see an error message because there is no database driver available.
+
+You should stop the server/proxy and continue with the steps. **It is not recommended to reload the server/proxy.**
+
+### Install required Drivers [step]
+
+Choose a [database driver](https://github.com/GradientTim/gradeway/releases) of your choice and place the **database driver .jar** file in the `plugins/gradeway/drivers` folder.
+
+Configure the Gradeway `config.toml` file to suit your needs and ensure that the drivers can connect successfully.
+[You can find more information here.](../configure)
+
+<Callout type="idea">
+  You can also install an external messaging driver directly and place it in this folder as well.
+</Callout>
+
+### Create the database [step]
+
+Gradeway does **NOT** create the database itself, so **you** will need to create the database **manually**.
+
+```sql
+--- use the name you have configured, default is 'gradeway'
+CREATE DATABASE gradeway;
+```
+
+<Callout type="warn">
+  Gradeway will create **17 tables**. These have a prefix (`gradeway_`) by default, but if you care
+  about organization, use an external database instead of a single database for all your systems.
+</Callout>
+
+### Start the server / proxy again [step]
+
+Now start your server or proxy again and wait until Gradeway has finished loading. If no error message appears, you've done everything correctly.
+
+You may execute these commands in the console to grant yourself full access to Gradeway.
+_The command prefix may differ from your platform_
+
+<Callout>
+  If you haven't entered the server or proxy yet, run this command first, otherwise Gradeway won't
+  be able to find you in the system: `gradeway player create (Name) (UUID)`
+</Callout>
+
+{/* shell has a great highlight */}
+
+```shell
+gradeway permission add "gradeway.*" REGEX
+gradeway player modify <name> permissions set "gradeway.*"
+```
+
+## Checklist
+
+- [ ] Gradeway was successfully loaded
+- [ ] A database Schema is created and accessible with the configured credentials
+- [ ] A database Driver is installed and loaded without warnings/errors
+- [ ] The database driver is able to connect
+  - [ ] Environment variables are correctly defined
+  - [ ] No error message found in the console about the database driver

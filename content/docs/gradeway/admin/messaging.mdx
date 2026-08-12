@@ -1,0 +1,53 @@
+---
+title: Messaging
+description: A guide how to configure the messaging in Gradeway.
+---
+
+## Activate and Configure
+
+Make sure that a messaging driver is located in the `drivers` folder and that it can be loaded successfully.
+
+Set `messaging.enabled` to `true` in `config.toml`, and set the driver's ID in `messaging.driver`. The configuration file should now look like this:
+
+```toml [config.toml]
+[messaging]
+  enabled = true
+  # replace the driver id with the one you have installed and configured
+  driver = "redis"
+```
+
+## Encryption
+
+Some messaging drivers display a warning if encryption is not enabled, as this could result in incorrect or corrupted payload data being sent to Gradeway.
+The encryption feature can be enabled for any messaging driver.
+
+Encryption is highly recommended if the warning appears and Gradeway is being used in a production system.
+
+### Generate a random secret [step]
+
+```shell
+openssl rand -base64 16
+```
+
+The command above will generate a random Base64 text that looks like this:
+`YAYDeuwpdh6Y9toYDN+C2Q==`
+
+### Configure the Environment [step]
+
+```toml title="config.toml"
+[messaging]
+  # ...
+  [messaging.variables]
+    # ...
+    GRADEWAY_ENCRYPTION_ENABLED = true
+    GRADEWAY_ENCRYPTION_SECRET = "PASTE_THE_SECRET_FROM_STEP_1"
+```
+
+<Callout type="warn">
+  **This configuration must now be added wherever Gradeway is used; otherwise, the data for
+  real-time updates will be skipped when the payloads cannot be successfully verified / decrypted.**
+</Callout>
+
+### Start the server / proxy [step]
+
+After you start your server or proxy, messaging will work just as it did before – except that the payloads will now be encrypted.

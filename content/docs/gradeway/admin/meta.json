@@ -1,0 +1,5 @@
+{
+  "title": "Administration",
+  "pages": ["install", "configure", "messaging"],
+  "defaultOpen": true
+}

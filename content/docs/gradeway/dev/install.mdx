@@ -1,0 +1,31 @@
+---
+title: Installation
+description: A guide on how to correctly install Gradeway as a developer.
+---
+
+All dependencies published from **Gradeway** are available on **Maven Central**.
+
+![Maven Central Version](https://img.shields.io/maven-central/v/dev.gradienttim.gradeway/api?style=flat-square&label=Maven%20Central)
+
+```kotlin tab="build.gradle.kts"
+dependencies {
+    compileOnly("dev.gradienttim.gradeway:api:VERSION")// [!code focus]
+}
+```
+
+```groovy tab="build.gradle"
+dependencies {
+    compileOnly 'dev.gradienttim.gradeway:api:VERSION'// [!code focus]
+}
+```
+
+```xml tab="pom.xml"
+<dependencies>
+  <dependency> <!-- [!code focus] -->
+    <groupId>dev.gradienttim.gradeway</groupId> <!-- [!code focus] -->
+    <artifactId>api</artifactId> <!-- [!code focus] -->
+    <version>VERSION</version> <!-- [!code focus] -->
+    <scope>provided</scope> <!-- [!code focus] -->
+  </dependency> <!-- [!code focus] -->
+</dependencies>
+```

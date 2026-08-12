@@ -1,0 +1,68 @@
+---
+title: Configuration
+description: A guide on how to correctly configure Gradeway as a server administrator.
+---
+
+```toml title="config.toml"
+version = 1
+
+[database]
+  # Defines the database type that Gradeway should use.
+  # Use the 'id' of the installed database driver.
+  driver = "postgres"
+  # Defines the prefix for all Gradeway database tables.
+  # Set the value to an empty string to not use a prefix.
+  prefix = "gradeway_"
+
+  # Defines variables for the database connection of the driver.
+  # Each available driver should expose its available environment variables you can use here.
+  # When a variable in the driver is not set and has not a default fallback, an error will be thrown.
+  # You can decide of defining the variables here or inside the .env file / current application.
+  [database.variables]
+
+[messaging]
+  # Controls whether messaging should be enabled or disabled.
+  # If messaging is disabled, data can no longer be synchronized in real time.
+  enabled = false
+  # Defines the type of messaging service.
+  # Use the 'id' of the installed messaging driver.
+  driver = ""
+
+  # Defines variables for the messaging connection of the driver.
+  # Each available driver should expose its available environment variables you can use here.
+  # When a variable in the driver is not set and has not a default fallback, an error will be thrown.
+  # You can decide of defining the variables here or inside the .env file / current application.
+  [messaging.variables]
+
+[appearance]
+  # Defines the prefix that is prepended to messages sent by Gradeway.
+  # Supports MiniMessage formatting.
+  prefix = "<gradient:#ed751f:#e89e1e>Gradeway</gradient> <dark_gray>›</dark_gray> "
+  # Defines the primary color used throughout Gradeway messages.
+  # Must be a hex color code.
+  primaryColor = "#ed751f"
+  # Defines the secondary color used throughout Gradeway messages.
+  # Must be a hex color code.
+  secondaryColor = "#e89e1e"
+
+[backup]
+  # Defines the maximum decompressed size, in bytes, allowed when importing a backup or migration file.
+  # Protects against decompression-bomb archives that expand to consume excessive memory once decompressed.
+  # Increase this if your server has a very large dataset and legitimate imports are being rejected.
+  maxImportSizeBytes = 2147483648
+
+[env]
+  # Specifies where Gradeway should find the .env file containing the credentials.
+  # By default, the file is located in the same directory as this configuration file.
+  # If the path is changed, make sure that Gradeway or the application itself has access to this file so it can read its contents.
+  file = "./.env"
+  # If this option is enabled, Gradeway will attempt to read environment variables from the configured .env file above.
+  # Variables found in the .env file will override Variables defined in the Gradeway configuration.
+  readFromFile = true
+  # If this option is enabled, Gradeway will attempt to read environment variables from global system environment variables.
+  readFromSystem = false
+  # If this option is enabled, Gradeway will attempt to read environment variables from the running application that defines properties via the '-Dkey=value' flag.
+  readFromProperties = false
+
+[platform]
+```

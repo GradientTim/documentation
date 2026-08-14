@@ -1,5 +1,6 @@
 {
   "title": "Administration",
-  "pages": ["install", "configure", "messaging", "drivers"],
+  "icon": "UserStar",
+  "pages": ["install", "configure", "messaging", "drivers", "migrate", "backup"],
   "defaultOpen": true
 }

@@ -1,0 +1,58 @@
+---
+title: Backup
+description: A guide on how to back up and restore Gradeway's data.
+---
+
+A backup is a full, point-in-time snapshot of Gradeway's database (roles, players, groups,
+permissions, attributes and everything linking them together), stored as a single archive file you
+can restore from later, whether that's recovering from a mistake or moving data to another server.
+
+## Exporting
+
+```
+/gradeway backup export
+```
+
+This reads every table straight out of the database and writes it into a `.tar.gz` archive named
+after the current date and time (for example `2026-08-14_12-30-00.tar.gz`), one JSON file per
+table inside the archive. The file is saved into the `backups` folder inside Gradeway's data
+directory (`plugins/gradeway/backups/`), created automatically the first time you run an export.
+
+<Callout type="idea">
+  Exporting doesn't touch your existing data at all, it's safe to run at any time, including
+  before a [migration](/gradeway/admin/migrate) or a risky bulk change.
+</Callout>
+
+## Importing
+
+```
+/gradeway backup import <file> [wipe=true]
+```
+
+This queues a job, run `/gradeway confirm <jobId>` to actually execute it, see
+[Commands](/gradeway/commands#base-command). `<file>` must be the name of an archive already
+sitting in the `backups` folder, exactly as `/gradeway backup export` produced it (or however you
+named it if you copied one in from elsewhere).
+
+<Callout type="warn">
+  By default, importing **wipes all existing Gradeway data** before restoring the archive, it's a
+  full replace, not a merge. Set `wipe=false` to skip the wipe and layer the archive's data on top
+  of what's already there instead, existing rows with matching IDs are overwritten and anything
+  else is left untouched.
+</Callout>
+
+Every server or proxy sharing a database (or connected over [messaging](/gradeway/admin/messaging))
+has its caches fully flushed once an import completes, so the restored data takes effect
+everywhere immediately.
+
+### Decompression size limit
+
+To protect against decompression-bomb archives, only files whose decompressed content stays under
+`backup.maxImportSizeBytes` (2 GiB by default) are accepted, imports past that limit fail instead
+of consuming unbounded memory. Raise this in your [configuration](/gradeway/admin/configure) if you
+have a legitimately large dataset and imports are being rejected.
+
+<Callout type="idea">
+  This same limit applies to [migration](/gradeway/admin/migrate) imports, since both read through
+  the same size-limited decompression step.
+</Callout>

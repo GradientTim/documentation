@@ -1,0 +1,88 @@
+---
+title: Migrate
+description: A guide on how to migrate data from another permission plugin into Gradeway.
+---
+
+Migration is how you move an existing permission setup into Gradeway from another plugin, it's a
+one-time, one-way import rather than an ongoing sync. A **migration strategy** knows how to read
+one specific plugin's export format and translate it into Gradeway's data model (roles, players,
+groups, permissions and attributes). Gradeway ships with official strategies out of the box, and
+extensions can register additional ones, see [Building a Migration Strategy](/gradeway/dev/strategies)
+if you want to write your own.
+
+<Callout type="warn">
+  Running a migration **wipes all existing Gradeway data** before importing, it's a full replace,
+  not a merge. Take a `/gradeway backup export` first if you have data in Gradeway you'd want to
+  restore afterwards, see [Commands](/gradeway/commands#backup).
+</Callout>
+
+The general flow is the same for every strategy:
+
+1. Export your data from the other plugin, in whatever format that plugin produces.
+2. Place the exported file in the `migrations` folder inside Gradeway's data directory
+   (`plugins/gradeway/migrations/`), created automatically the first time you run a migration.
+3. Run `/gradeway migrate <type> <file>` and confirm the job, see [Commands](/gradeway/commands#migration).
+
+## Official Migration Strategies
+
+| ID          | Plugin                              | Notes                                                                                        |
+| ----------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `luckperms` | [LuckPerms](https://luckperms.net/) | Imports groups, users, permissions, inheritance, prefixes/suffixes and weights. Tracks are skipped. |
+
+<Callout type="idea">
+  Migrating from a plugin that isn't listed here? See
+  [Building a Migration Strategy](/gradeway/dev/strategies) to write your own.
+</Callout>
+
+<Tabs items={['LuckPerms']}>
+<Tab value="LuckPerms">
+
+### Export your LuckPerms data [step]
+
+On the server currently running LuckPerms, run:
+
+```
+/lp export <file>
+```
+
+This creates `<file>.json.gz` inside LuckPerms' own plugin folder (`plugins/LuckPerms/`), see the
+[LuckPerms wiki](https://luckperms.net/wiki/General-Commands#lp-export-file--upload) for the full
+command reference.
+
+<Callout type="warn">
+  Only the plain, file-based export is supported. The `--upload` flag exports to LuckPerms' web
+  service instead of a local file, Gradeway can't read that. Leave out `--without-users` and
+  `--without-groups` too, Gradeway needs the full export to migrate both groups and users in one go.
+</Callout>
+
+### Move the file into Gradeway's migrations folder [step]
+
+Copy the exported `<file>.json.gz` into `plugins/gradeway/migrations/` on the server or proxy
+running Gradeway, creating the `migrations` folder first if this is your first migration.
+
+### Run the migration [step]
+
+```
+/gradeway migrate luckperms <file>.json.gz
+```
+
+This queues a job, run `/gradeway confirm <jobId>` to actually execute it, see
+[Commands](/gradeway/commands#base-command).
+
+#### What gets migrated
+
+| LuckPerms                          | Gradeway                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------- |
+| Group                                | Role                                                                       |
+| User                                 | Player                                                                     |
+| Permission node                      | Permission (wildcard nodes, e.g. `foo.*`, become a `REGEX` permission)    |
+| Inheritance node (`group.<name>`)    | Role parent (for groups) or a role assignment (for users)                 |
+| `prefix.<priority>.<value>` node     | `gradeway:prefix` attribute (highest priority wins)                       |
+| `suffix.<priority>.<value>` node     | `gradeway:suffix` attribute (highest priority wins)                       |
+| `displayname.<value>` node           | `gradeway:display_name` attribute                                         |
+| `weight.<value>` node                | Entity weight (highest value wins)                                        |
+| Track                                | Not supported, skipped with a warning in the console                      |
+| Any other node type                  | Skipped with a warning in the console                                     |
+
+</Tab>
+</Tabs>

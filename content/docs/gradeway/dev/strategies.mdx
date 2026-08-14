@@ -1,0 +1,95 @@
+---
+title: Strategies
+description: A guide on how to build custom migration strategies for Gradeway.
+---
+
+A strategy in Gradeway is a `MigrationStrategy` - the pluggable mechanism behind
+`/gradeway migrate <type> <file>` that imports data exported from another permission plugin into
+Gradeway. See [Commands](/gradeway/commands#migration) for the admin-facing command.
+
+## The MigrationStrategy interface
+
+```kotlin
+interface MigrationStrategy : Typed {
+    fun migrate(file: File): Either<Throwable, Unit>
+}
+```
+
+`Typed` is a small shared contract for anything that's registered and looked up by a string key:
+
+```kotlin
+interface Typed {
+    val type: String
+}
+```
+
+It's the same contract used by attribute types - see [Attributes](/gradeway/dev/attributes) for
+the other place this pattern shows up.
+
+## Registering a strategy
+
+Strategies live in a `TypedRegistry<TItem>`, a small generic base every `Typed` registry in
+Gradeway builds on:
+
+```kotlin
+abstract class TypedRegistry<TItem> where TItem : Any, TItem : Typed {
+    val items: Set<TItem>
+    fun register(item: TItem) = items.add(item)
+    fun unregister(type: String) = items.removeIf { it.type == type }
+    fun find(type: String) = items.find { it.type == type }
+}
+```
+
+`MigrationStrategyRegistry` is a `TypedRegistry<MigrationStrategy>`. Register your strategy from
+your own manager or plugin bootstrap, typically as soon as Gradeway loads:
+
+```kotlin
+MigrationStrategyRegistry.register(MyMigrationStrategy(gradeway))
+```
+
+<Callout type="idea">
+  Once registered, your strategy's `type` is picked up automatically - tab-completion for
+  `/gradeway migrate <type> <file>` and the lookup that runs it are both driven directly off
+  `MigrationStrategyRegistry`. No further wiring is needed.
+</Callout>
+
+## Example: importing from another plugin
+
+Here's a trimmed-down shape of Gradeway's built-in LuckPerms strategy, showing the pattern a
+strategy typically follows: decode the export file, run the import inside a transaction, then
+flush caches over messaging.
+
+```kotlin title="LuckPermsMigrationStrategy.kt"
+class LuckPermsMigrationStrategy(val gradeway: CommonGradeway<*>) : MigrationStrategy {
+    override val type: String = "luckperms"
+
+    override fun migrate(file: File): Either<Throwable, Unit> = either {
+        GzipCompressorInputStream(file.inputStream()).use { stream ->
+            val data = runCatching { Json.decodeFromStream<LuckPermsExport>(stream) }.getOrNull()
+                ?: raise(Throwable("Failed to decode LuckPerms data..."))
+
+            transaction(gradeway.database) {
+                wipeExistingData()
+                Importer(data).run()
+            }
+
+            gradeway.messaging.publish(CacheFlushPayload)
+        }
+    }
+}
+```
+
+<Callout type="warn">
+  A strategy is responsible for its own cache invalidation. Bulk imports like this write directly to
+  the database and bypass the normal service layer, so the caches other servers hold won't otherwise
+  notice the change - always publish a cache flush over messaging once you're done.
+</Callout>
+
+## Handling errors
+
+`MigrationManager.migrate` surfaces a sealed `MigrateError` for the command layer to report back
+to the admin:
+
+- `FileNotFound` - the given file doesn't exist.
+- `StrategyNotRegistered` - no strategy is registered for the given `type`.
+- `Unexpected(throwable)` - wraps whatever your strategy's `migrate` returned as a `Left`.

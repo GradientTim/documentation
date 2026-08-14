@@ -1,0 +1,119 @@
+---
+title: Attributes
+description: A guide on how to use and extend Gradeway's attribute system.
+---
+
+Attributes are arbitrary, typed key-value metadata attached to a player or role - a prefix, a
+suffix, a display name, or a numeric stat, for example. Each attribute's key is a namespaced
+[Adventure `Key`](https://jd.advntr.dev/key/). See [Commands](/gradeway/commands#attributes) for
+the admin-facing commands used to manage them.
+
+## Attribute types
+
+Every attribute has an `AttributeType<T>`, which knows how to (de)serialize a value of type `T`
+to and from a string for storage:
+
+```kotlin
+abstract class AttributeType<T : Any> : Typed {
+    abstract val klass: KClass<T>
+    abstract val unsafe: Boolean
+    abstract fun serialize(value: T): String
+    abstract fun deserialize(value: String): T?
+    abstract fun fallback(attributeKey: Key): T
+}
+```
+
+Like [migration strategies](/gradeway/dev/strategies), `AttributeType` extends `Typed` and is
+registered in a `TypedRegistry` - `AttributeTypeRegistry` - looked up by its `type` string.
+Gradeway ships with `string`, `boolean`, `integer`, `long`, `double`, `float`, `uuid`, `instant`
+and `duration` registered by default.
+
+## Creating an attribute
+
+An `Attribute<TValue>` pairs a `type`, a `key` and a `value`. `AttributeBuilder` provides
+convenience factories for each built-in type:
+
+```kotlin
+import dev.gradienttim.gradeway.attribute.Attribute
+import net.kyori.adventure.key.Key
+
+val attribute = Attribute.string(Key.key("gradeway", "prefix"), "[Admin]")
+// Attribute.boolean(...), Attribute.integer(...), Attribute.uuid(...), and so on
+```
+
+## Attaching attributes
+
+Use `AttributeService` (available on the `Gradeway` instance as `gradeway.attributes`) to attach
+an attribute to a player or role:
+
+```kotlin
+gradeway.attributes.addPlayerAttribute(playerId, attribute)
+```
+
+Player and role entities also expose the same operations directly through `AttributeReference`:
+`addAttribute`, `updateAttribute`, `removeAttribute`, `clearAttributes`, `hasAttribute` and
+`getAttribute`.
+
+<Callout type="idea">
+  Every mutation publishes a change event (`PlayerAttributeChangedEvent`,
+  `RoleAttributesClearedEvent`, and so on) and the equivalent payload over messaging, so other
+  servers pick up the change without needing a manual cache flush.
+</Callout>
+
+## Custom attribute types
+
+To support your own value type, implement `AttributeType<T>` and register it:
+
+```kotlin title="StringAttributeType.kt"
+object StringAttributeType : AttributeType<String>() {
+    override val type: String = "string"
+    override val klass: KClass<String> = String::class
+    override val unsafe: Boolean = false
+    override fun serialize(value: String): String = value
+    override fun deserialize(value: String): String = value
+    override fun fallback(attributeKey: Key): String = ""
+}
+```
+
+```kotlin
+AttributeTypeRegistry.register(MyAttributeType)
+```
+
+### Why `unsafe` matters
+
+Attribute values are always persisted as a plain string, and `deserialize` is what turns that
+string back into `T` when it's read. For `StringAttributeType` that conversion can never fail -
+any stored string is already a valid `String`. Other types aren't so lucky:
+
+```kotlin title="DurationAttributeType.kt"
+object DurationAttributeType : AttributeType<Duration>() {
+    override val type: String = "duration"
+    override val klass: KClass<Duration> = Duration::class
+    override val unsafe: Boolean = true
+    override fun serialize(value: Duration): String = value.toMillis().toString()
+    override fun deserialize(value: String): Duration? = value.toLongOrNull()?.let(Duration::ofMillis)
+    override fun fallback(attributeKey: Key): Duration = Duration.ZERO
+}
+```
+
+`DurationAttributeType` stores a duration as a string of milliseconds, so `deserialize` fails
+whenever the stored value isn't a valid number - which happens more often than it sounds: the
+database was edited by hand, the value was written by an older version of your type before its
+format changed, or another server on the network is running a different version of the plugin
+that provides the type. `deserialize` returning `T?` instead of `T` is how a type owns up to
+that risk, and `unsafe` is how it declares that risk to the rest of Gradeway.
+
+<Callout type="warn">
+  When `unsafe = true`, `CommonAttributeService` treats every stored value as unverified: on every
+  update it deserializes the value and, if that returns `null`, substitutes `fallback(attributeKey)`
+  and re-serializes it before continuing. This guarantees whatever's persisted afterward round-trips
+  cleanly. Leaving `unsafe = false` on a type whose `deserialize` can actually fail skips that
+  safety net entirely - a malformed value then surfaces as a `null` or a crash wherever your type's
+  `deserialize` is called directly, instead of being caught and repaired centrally.
+</Callout>
+
+<Callout type="idea">
+  Once registered, your type's `type` string becomes valid input to
+  `/gradeway player|role modify <idOrName> attributes add <key> <attributeType> <value>` - no
+  further wiring is needed.
+</Callout>

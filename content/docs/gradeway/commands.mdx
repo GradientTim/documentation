@@ -1,0 +1,212 @@
+---
+title: Commands
+description: An overview of all available commands in Gradeway.
+---
+
+Gradeway registers a single root command, `/gradeway`. The literal and its aliases (for example
+`/gw`) are defined by the platform module you're running, so the exact aliases available to you may
+differ slightly depending on whether you're on Paper, Bukkit, BungeeCord or Velocity.
+
+<Callout type="idea">
+  Every argument below that accepts an **ID or name** also works with just the beginning of a UUID
+  or name, since tab-completion suggests matching entities as you type.
+</Callout>
+
+## Base Command
+
+<Callout type="warn">
+  Commands marked **Requires confirmation** queue a job instead of executing immediately. Run
+  `/gradeway confirm <jobId>` to execute it, or `/gradeway cancel <jobId>` to discard it, before the
+  job expires.
+</Callout>
+
+| Command                    | Permission          | Description                                             |
+| --------------------------- | -------------------- | -------------------------------------------------------- |
+| `/gradeway`                 | -                     | Prints the running Gradeway version, commit and build time. |
+| `/gradeway reload`          | `gradeway.reload`    | Reloads the configuration and drivers.                    |
+| `/gradeway confirm <jobId>` | `gradeway.confirmJob`| Confirms a pending job.                                   |
+| `/gradeway cancel <jobId>`  | `gradeway.cancelJob` | Cancels a pending job.                                    |
+
+## Cache
+
+| Command                              | Permission              | Description                                             |
+| -------------------------------------- | ------------------------- | ---------------------------------------------------------- |
+| `/gradeway cache flush [cacheType]`    | `gradeway.cache.flush`    | Flushes one or all internal caches. Defaults to `ALL`.     |
+
+`cacheType` accepts one of:
+
+- `ALL` - flushes every cache below.
+- `ENTITIES` - players, roles and groups.
+- `ENTITY_PERMISSIONS` - the permission assignments of entities.
+- `ENTITY_EFFECTIVE_WEIGHTS` - the resolved effective weights of entities.
+- `ENTITY_EFFECTIVE_PERMISSIONS` - the resolved effective permissions of entities.
+
+## Backup
+
+| Command                                       | Permission             | Description                                                        |
+| ------------------------------------------------ | ------------------------- | ---------------------------------------------------------------------- |
+| `/gradeway backup export`                        | `gradeway.backup.export`  | Exports the current database to a backup file.                       |
+| `/gradeway backup import <file> [wipe=true]`     | `gradeway.backup.import`  | Imports a backup file, replacing existing data unless `wipe` is set to `false`. Requires confirmation. |
+
+## Migration
+
+| Command                                          | Permission        | Description                                                     |
+| ---------------------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| `/gradeway migrate <migrationType> <file>`           | `gradeway.migrate`   | Migrates data from another permission plugin's export into Gradeway. Requires confirmation. |
+
+`migrationType` must match the id of a migration strategy registered by the plugin or an installed
+extension (for example the export format of a supported permission plugin).
+
+## Permissions
+
+`/gradeway permission ...` manages the raw permission nodes that can be assigned to players, roles,
+groups and permission templates.
+
+| Command                                                       | Permission                      | Description                                                          |
+| ------------------------------------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------- |
+| `/gradeway permission add <value> [permissionType=EQUALS]`        | `gradeway.permission.add`          | Creates a new permission node.                                             |
+| `/gradeway permission remove <idOrValue>`                          | `gradeway.permission.remove`       | Deletes a permission node. Requires confirmation.                          |
+| `/gradeway permission modify <idOrValue> setValue <value>`        | `gradeway.permission.setValue`     | Changes the value of a permission node.                                    |
+| `/gradeway permission modify <idOrValue> setType <permissionType>`| `gradeway.permission.setType`      | Changes the match type of a permission node.                               |
+| `/gradeway permission list [page=1] [limit=10]`                    | `gradeway.permission.list`         | Lists all permission nodes.                                                |
+
+`permissionType` controls how the permission's value is matched and accepts one of:
+
+- `EQUALS` - matches the value exactly.
+- `STARTS_WITH` - matches values starting with the given value.
+- `ENDS_WITH` - matches values ending with the given value.
+- `REGEX` - matches the value as a regular expression.
+
+### Permission Templates
+
+Permission templates bundle multiple permission nodes together so they can be linked to (kept in
+sync with) or applied as a one-time snapshot to a player, role or group.
+
+| Command                                                                     | Permission                                    | Description                                                    |
+| -------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| `/gradeway permission template create <name>`                              | `gradeway.permissionTemplate.create`             | Creates a new permission template.                                |
+| `/gradeway permission template delete <id>`                                | `gradeway.permissionTemplate.delete`             | Deletes a permission template. Requires confirmation.             |
+| `/gradeway permission template modify <idOrName> setName <value>`          | `gradeway.permissionTemplate.setName`            | Renames a permission template.                                    |
+| `/gradeway permission template modify <idOrName> setAssignedTo <assignedTo>` | `gradeway.permissionTemplate.setAssignedTo`    | Restricts which entity type the template can be assigned to.      |
+| `/gradeway permission template modify <idOrName> permissions add <permissionIdOrValue>`    | `gradeway.permissionTemplate.permissions.add`    | Adds a permission node to the template.        |
+| `/gradeway permission template modify <idOrName> permissions remove <permissionIdOrValue>` | `gradeway.permissionTemplate.permissions.remove` | Removes a permission node from the template.   |
+| `/gradeway permission template modify <idOrName> permissions clear`        | `gradeway.permissionTemplate.permissions.clear`  | Removes all permission nodes from the template. Requires confirmation. |
+| `/gradeway permission template modify <idOrName> permissions list [page=1] [limit=10]` | `gradeway.permissionTemplate.permissions.list` | Lists the permission nodes on the template.    |
+| `/gradeway permission template list [page=1] [limit=10]`                   | `gradeway.permissionTemplate.list`               | Lists all permission templates.                                    |
+
+`assignedTo` accepts `ALL`, `ROLE`, `PLAYER` or `GROUP`, restricting the template so it can only be
+linked to or applied on that entity type.
+
+## Shared Entity Commands
+
+Roles, groups and players all expose the same **permissions** sub-commands, and roles and players
+additionally expose the **attributes** sub-commands below. They are documented once here to avoid
+repeating identical tables in the Roles, Groups and Players sections further down.
+
+In the tables below, `<entityType>` is a placeholder for whichever entity you're modifying -
+`role`, `group` or `player`.
+
+### Permissions
+
+Available under `/gradeway <role|group|player> modify <idOrName> permissions ...`.
+
+| Command                                                  | Permission                                | Description                                              |
+| ------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| `permissions set <permission> [status=true]`             | `gradeway.<entityType>.permissions.set`            | Enables or disables a permission node directly on the entity. |
+| `permissions unset <permission>`                          | `gradeway.<entityType>.permissions.unset`          | Removes a directly assigned permission node.                  |
+| `permissions clear`                                       | `gradeway.<entityType>.permissions.clear`          | Removes all directly assigned permission nodes. Requires confirmation. |
+| `permissions list [page=1] [limit=10]`                     | `gradeway.<entityType>.permissions.list`           | Lists the entity's directly assigned permission nodes.        |
+| `permissions template link <templateIdOrName>`             | `gradeway.<entityType>.permissionTemplate.link`    | Links a permission template so future template changes stay synced. |
+| `permissions template unlink <templateIdOrName>`           | `gradeway.<entityType>.permissionTemplate.unlink`  | Unlinks a previously linked permission template.               |
+| `permissions template apply <templateIdOrName>`            | `gradeway.<entityType>.permissionTemplate.apply`   | Applies a one-time snapshot of a template's permissions.       |
+| `permissions template revoke <templateIdOrName>`           | `gradeway.<entityType>.permissionTemplate.revoke`  | Revokes the permission nodes a template previously applied.    |
+
+### Attributes
+
+Available for roles and players only, under `/gradeway <role|player> modify <idOrName> attributes
+...`. Attributes attach typed, arbitrary key-value data (for example a prefix or a numeric stat) to
+an entity.
+
+| Command                                             | Permission                        | Description                                                    |
+| ------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------------- |
+| `attributes add <key> <attributeType> <value>`           | `gradeway.<entityType>.attributes.add`      | Adds a new attribute of the given `attributeType`.        |
+| `attributes update <key> <value>`                        | `gradeway.<entityType>.attributes.update`   | Updates the value of an existing attribute.                        |
+| `attributes remove <key>`                                | `gradeway.<entityType>.attributes.remove`   | Removes an attribute.                                              |
+| `attributes clear`                                       | -                                     | Removes all attributes from the entity. Requires confirmation.     |
+| `attributes list [page=1] [limit=10]`                    | `gradeway.<entityType>.attributes.list`     | Lists the entity's attributes.                                     |
+
+`key` is a [namespaced key](https://jd.advntr.dev/key/) (for example `gradeway:prefix`); if no
+namespace is given, `minecraft` is assumed.
+
+`attributeType` must be a registered attribute type. Gradeway ships with `string`, `boolean`,
+`integer`, `long`, `double`, `float`, `uuid`, `instant` and `duration`; installed extensions may
+register additional types.
+
+## Roles
+
+| Command                                            | Permission                | Description                                                    |
+| ------------------------------------------------------ | ---------------------------- | -------------------------------------------------------------------- |
+| `/gradeway role create <name>`                          | `gradeway.role.create`       | Creates a new role.                                                  |
+| `/gradeway role delete <id>`                            | `gradeway.role.delete`       | Deletes a role. Requires confirmation.                               |
+| `/gradeway role modify <idOrName> setWeight <value>`    | `gradeway.role.setWeight`    | Sets the weight of the role, used to resolve conflicting permissions/attributes across roles. |
+| `/gradeway role list [page=1] [limit=10]`               | `gradeway.role.list`         | Lists all roles.                                                      |
+
+Roles also support the shared **attributes** and **permissions** sub-commands described under
+**Shared Entity Commands** above, prefixed with `/gradeway role modify <idOrName> ...`, plus the
+role hierarchy commands:
+
+| Command                                                              | Permission                      | Description                                          |
+| ------------------------------------------------------------------- | ---------------------------------- | --------------------------------------------------------- |
+| `/gradeway role modify <idOrName> parents add <parentId>`           | `gradeway.role.parents.add`        | Adds a parent role to inherit permissions/attributes from. |
+| `/gradeway role modify <idOrName> parents remove <parentId>`        | `gradeway.role.parents.remove`     | Removes a parent role.                                      |
+| `/gradeway role modify <idOrName> parents list [page=1] [limit=10]` | `gradeway.role.parents.list`       | Lists the parents of the role.                              |
+| `/gradeway role modify <idOrName> children add <childId>`           | `gradeway.role.children.add`       | Adds a child role.                                          |
+| `/gradeway role modify <idOrName> children remove <childId>`        | `gradeway.role.children.remove`    | Removes a child role.                                       |
+| `/gradeway role modify <idOrName> children list [page=1] [limit=10]`| `gradeway.role.children.list`      | Lists the children of the role.                             |
+
+<Callout type="idea">
+  Adding a parent to role A is equivalent to adding role A as a child on the parent role - both
+  commands modify the same relation, cyclic relations are rejected.
+</Callout>
+
+## Groups
+
+Groups bundle roles together so multiple players can share the same set of roles at once.
+
+| Command                                                     | Permission                    | Description                                                     |
+| ------------------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| `/gradeway group create <name> [defaultWeight=-1]`             | `gradeway.group.create`          | Creates a new group.                                                    |
+| `/gradeway group delete <idOrName>`                             | `gradeway.group.delete`          | Deletes a group. Requires confirmation.                                 |
+| `/gradeway group modify <idOrName> setName <name>`              | `gradeway.group.setName`         | Renames a group.                                                        |
+| `/gradeway group modify <idOrName> setDefaultWeight <value>`    | `gradeway.group.setDefaltWeight` | Sets the default weight new members of the group are assigned.          |
+| `/gradeway group modify <idOrName> roles add <roleId>`          | `gradeway.group.roles.add`       | Adds a role to the group.                                               |
+| `/gradeway group modify <idOrName> roles remove <roleId>`       | `gradeway.group.roles.remove`    | Removes a role from the group.                                          |
+| `/gradeway group list [page=1] [limit=10]`                      | `gradeway.group.list`            | Lists all groups.                                                       |
+
+Groups also support the shared **permissions** sub-commands described under **Shared Entity
+Commands** above, prefixed with `/gradeway group modify <idOrName> ...`.
+
+## Players
+
+| Command                                             | Permission                | Description                                                            |
+| ------------------------------------------------------ | ---------------------------- | ---------------------------------------------------------------------------- |
+| `/gradeway player create <id> <name>`                    | `gradeway.player.create`     | Creates a player entity for an existing UUID.                                |
+| `/gradeway player delete <id>`                           | `gradeway.player.delete`     | Deletes a player entity. Requires confirmation.                              |
+| `/gradeway player modify <idOrName> setWeight <value>`   | `gradeway.player.setWeight`  | Sets the weight of the player, used to resolve conflicting permissions/attributes. |
+| `/gradeway player list [page=1] [limit=10]`              | `gradeway.player.list`       | Lists all players.                                                            |
+
+Players also support the shared **attributes** and **permissions** sub-commands described under
+**Shared Entity Commands** above, prefixed with `/gradeway player modify <idOrName> ...`, plus
+role assignment commands:
+
+| Command                                                                 | Permission                        | Description                                            |
+| ------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| `/gradeway player modify <idOrName> roles add <roleId> [until]`           | `gradeway.player.roles.add`          | Adds a role to the player, optionally expiring at a given time. |
+| `/gradeway player modify <idOrName> roles remove <roleId>`                | `gradeway.player.roles.remove`       | Removes a role from the player.                              |
+| `/gradeway player modify <idOrName> roles setPrimary <roleId>`            | `gradeway.player.roles.setPrimary`   | Sets the player's primary role.                              |
+
+<Callout>
+  `until` accepts a duration made of `Y` (years), `M` (months), `D` (days), `h` (hours), `m`
+  (minutes) and `s` (seconds), which can be combined, e.g. `1D 12h` expires the role in 1 day and
+  12 hours. Omit it to add the role permanently.
+</Callout>

@@ -1,0 +1,210 @@
+---
+title: Drivers
+description: A guide on how to build custom database and messaging drivers for Gradeway.
+---
+
+A driver is a pluggable backend implementation for either a **database** or a **messaging**
+system. Drivers are compiled only against `core-api`, so Gradeway's core never has to depend on a
+JDBC driver, Jedis, or any other third-party client directly.
+
+If you're looking to install an already-built driver as a server administrator, see
+[Installation](/gradeway/admin/install) and [Configuration](/gradeway/admin/configure) instead.
+
+## The Driver class
+
+Every driver extends the abstract `Driver` class and implements one of two adapter interfaces,
+depending on what kind of backend it provides.
+
+```kotlin title="Driver.kt"
+abstract class Driver : KoinComponent {
+    val gradeway: Gradeway<*> by inject()
+    lateinit var config: DriverConfig
+    var classLoader: URLClassLoader? = null
+
+    open fun load() = Unit
+    open fun unload() = Unit
+}
+```
+
+```kotlin
+interface DatabaseAdapter {
+    fun createDataSource(environment: Environment): DataSource
+}
+
+interface MessagingAdapter {
+    fun createMessagingBroker(environment: Environment): MessagingBroker
+}
+```
+
+The class is also annotated with `@CreateDriver`, giving it a stable `id` and a `DriverType`:
+
+```kotlin
+@CreateDriver(id = "my-driver", type = DriverType.DATABASE) // or DriverType.MESSAGING
+class MyDriver : Driver(), DatabaseAdapter {
+    override fun createDataSource(environment: Environment): DataSource {
+        TODO()
+    }
+}
+```
+
+## Discovery and loading
+
+Drivers are discovered in one of two ways.
+
+For the common case (database and messaging backends), a KSP processor scans your module at
+compile time for classes annotated `@CreateDriver` that extend `Driver`, and writes a
+`driver.json` file (`{id, type, entry}`) into the module's generated resources. At runtime,
+Gradeway scans the `drivers/` folder next to its data folder, opens every `.jar` it finds, reads
+`driver.json`, and loads the class through its own `URLClassLoader`.
+
+<Callout type="idea">
+  This is exactly what admins are told to do in [Installation](/gradeway/admin/install): build your
+  driver as a shaded jar and drop it into the `drivers/` folder. No further wiring is required, it's
+  picked up automatically on the next `load()`.
+</Callout>
+
+For drivers that need access to a platform-specific object (a `JavaPlugin` instance, for
+example), you can instead register the driver manually with `DriverManager.registerDriver`:
+
+```kotlin
+interface DriverManager : Loadable, Unloadable {
+    fun findDriver(id: String, type: DriverType): Driver?
+    fun registerDriver(id: String, type: DriverType, driver: Driver): Boolean
+}
+```
+
+```kotlin title="GradewayPlugin.kt"
+gradeway.drivers.registerDriver(
+    id = "plugin-message",
+    type = DriverType.MESSAGING,
+    driver = PluginMessageDriver(this),
+)
+```
+
+## Building a driver module
+
+A driver lives in its own Gradle module and only needs three plugins: Kotlin, KSP, and Shadow (to
+produce a single fat jar).
+
+### Inside the Gradeway repository
+
+Looking at any `driver-database-*` module in the Gradeway repository, the setup is:
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("gradeway-base")
+    id("gradeway-shadow")
+    id("com.google.devtools.ksp")
+}
+
+dependencies {
+    ksp(project(":core-api"))
+    compileOnly(project(":core-api"))
+    implementation("org.xerial:sqlite-jdbc:3.50.2.0") // shade your backend's client here
+}
+```
+
+```toml title="gradle.properties"
+module.name=database-my-driver
+module.version=0.1.0
+```
+
+The `gradeway-shadow` plugin uses `module.name`/`module.version` to name the resulting fat jar
+`gradeway-<module.name>-<module.version>.jar`, and disables the plain `jar` task in favor of
+`shadowJar`. That shaded jar is the file you (or an admin) drop into `drivers/`.
+
+<Callout type="warn">
+  `gradeway-base` and `gradeway-shadow` are internal convention plugins defined in this repository's
+  `buildSrc` - they're only there to keep every in-repo module consistent, and aren't published
+  anywhere. They won't resolve in your own project, so build a driver outside the Gradeway codebase
+  as shown below instead.
+</Callout>
+
+### Outside the Gradeway codebase
+
+In your own project, apply the underlying plugins directly and depend on the published
+`dev.gradienttim.gradeway:api` artifact (see [Installation](/gradeway/dev/install)) instead of
+the `core-api` project. Here's everything a standalone driver project needs:
+
+```kotlin tab="build.gradle.kts"
+plugins {
+    kotlin("jvm") version "2.4.10"
+    id("com.google.devtools.ksp") version "2.3.10"
+    id("com.gradleup.shadow") version "9.6.1"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    ksp("dev.gradienttim.gradeway:api:VERSION")
+    compileOnly("dev.gradienttim.gradeway:api:VERSION")
+    implementation("org.xerial:sqlite-jdbc:3.50.2.0") // shade your backend's client here
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+tasks {
+    jar {
+        enabled = false
+    }
+    shadowJar {
+        archiveFileName.set("my-driver-0.1.0.jar")
+    }
+}
+```
+
+```kotlin tab="settings.gradle.kts"
+rootProject.name = "my-driver"
+```
+
+The `ksp("dev.gradienttim.gradeway:api:VERSION")` line matters just as much as the
+`compileOnly` one - the published `api` artifact bundles the KSP processor that generates
+`driver.json` for your `@CreateDriver`-annotated class, so both are needed for discovery to
+work. The resulting jar from `shadowJar` is the file you drop into `drivers/`.
+
+## Reading configuration
+
+`createDataSource`/`createMessagingBroker` receive an `Environment`, which reads connection
+settings from environment variables. Its helpers (`string`, `stringRequired`, `stringDefault`,
+`int`, `intRequired`, `intDefault`, ...) each accept a varargs list of names, searched in order -
+this lets you support both a generic name (e.g. `GRADEWAY_DATABASE_FILE`) and a driver-specific
+alias (e.g. `GRADEWAY_SQLITE_FILE`).
+
+## Example: a SQLite driver
+
+Here's the complete `driver-database-sqlite` module, the simplest database driver shipped with
+Gradeway:
+
+```kotlin title="SQLiteDriver.kt"
+@CreateDriver(id = "sqlite", type = DriverType.DATABASE)
+class SQLiteDriver : Driver(), DatabaseAdapter {
+    override fun createDataSource(environment: Environment): DataSource {
+        val databaseFile = environment.stringRequired(
+            names = arrayOf("GRADEWAY_DATABASE_FILE", "GRADEWAY_SQLITE_FILE")
+        )
+        return SQLiteDataSource().apply { url = "jdbc:sqlite:$databaseFile" }
+    }
+}
+```
+
+```kotlin title="build.gradle.kts"
+plugins {
+    id("gradeway-base")
+    id("gradeway-shadow")
+    id("com.google.devtools.ksp")
+}
+
+dependencies {
+    ksp(project(":core-api"))
+    compileOnly(project(":core-api"))
+    implementation("org.xerial:sqlite-jdbc:3.50.2.0")
+}
+```
+
+Once built and dropped into `drivers/`, this driver becomes selectable by setting
+`database.driver = "sqlite"` in `config.toml` - see [Configuration](/gradeway/admin/configure)
+for the full set of database options.

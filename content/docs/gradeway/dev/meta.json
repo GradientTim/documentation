@@ -1,5 +1,5 @@
 {
   "title": "Development",
-  "pages": ["install", "usage"],
+  "pages": ["install", "usage", "drivers", "strategies", "attributes"],
   "defaultOpen": true
 }

@@ -48,11 +48,9 @@ function Content({ path }: { path: string }) {
   const page = docs.getPage(path)
   if (!page) throw new Error(`unknown page: ${path}`)
 
-  const { toc, body: MDX } = page
+  const { toc, body: MDX, lastModified } = page
 
   const plainMarkdownUrl = page.info.path.replace(/\.mdx$/, '.md')
-
-  const lastModified = page.lastModified
 
   return (
     <DocsPage toc={toc} breadcrumb={{ enabled: false }}>

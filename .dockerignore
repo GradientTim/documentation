@@ -7,7 +7,6 @@ dist-ssr
 .wrangler
 .vinxi
 .source
-.git
 .idea
 .vscode
 *.local

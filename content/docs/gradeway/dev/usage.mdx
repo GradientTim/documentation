@@ -24,7 +24,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class MyClass : KoinComponent {
-    val gradeway: Gradeway by inject()
+    val gradeway: Gradeway<*> by inject()
 }
 ```
 
@@ -39,7 +39,7 @@ The Lifecycle instance contains some internal management functions that are not 
 import dev.gradienttim.gradeway.Gradeway
 import dev.gradienttim.gradeway.GradewayLifecycle
 
-val gradeway = Gradeway.getOrThrow() as GradewayLifecycle
+val gradeway = Gradeway.getOrThrow() as GradewayLifecycle<*>
 
 val state = gradeway.state // can be LOADED, UNLOADED or PROCESSING
 

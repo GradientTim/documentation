@@ -1,6 +1,6 @@
 import type { PropsWithChildren } from 'react'
 
-import { RootProvider } from 'fumadocs-ui/provider/tanstack'
+import { RootProvider } from '@fumadocs/base-ui/provider/tanstack'
 import { createRootRoute, HeadContent, Scripts, useRouter } from '@tanstack/react-router'
 
 import appCss from '../styles.css?url'

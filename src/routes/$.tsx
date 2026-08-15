@@ -1,9 +1,8 @@
-import { Suspense } from 'react'
-
+import { useMemo } from 'react'
 import { createServerFn } from '@tanstack/react-start'
 import { createFileRoute, notFound } from '@tanstack/react-router'
 
-import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import { DocsLayout } from '@fumadocs/base-ui/layouts/notebook'
 import { useFumadocsLoader } from 'fumadocs-core/source/client'
 
 import {
@@ -12,9 +11,9 @@ import {
   DocsPage,
   DocsTitle,
   MarkdownCopyButton,
-  ViewOptionsPopover,
   PageLastUpdate,
-} from 'fumadocs-ui/layouts/notebook/page'
+  ViewOptionsPopover,
+} from '@fumadocs/base-ui/layouts/notebook/page'
 
 import { baseOptions } from '~/lib/layout.shared.tsx'
 import { docs, source } from '~/lib/source.ts'
@@ -46,7 +45,9 @@ const serverLoader = createServerFn({
 
 function Content({ path }: { path: string }) {
   const page = docs.getPage(path)
-  if (!page) throw new Error(`unknown page: ${path}`)
+
+  // already handled in the loader, just here to make it not-undefinable.
+  if (!page) throw notFound()
 
   const { toc, body: MDX, lastModified } = page
 
@@ -75,13 +76,18 @@ function Content({ path }: { path: string }) {
 }
 
 function Page() {
-  const data = useFumadocsLoader(Route.useLoaderData())
+  const { path, pageTree } = useFumadocsLoader(Route.useLoaderData())
+
+  const layoutOptions = useMemo(() => {
+    const segments = path.split('/')
+    const project = segments.length >= 2 ? segments[0] : undefined
+
+    return baseOptions(project)
+  }, [path])
 
   return (
-    <DocsLayout {...baseOptions()} tree={data.pageTree}>
-      <Suspense>
-        <Content path={data.path} />
-      </Suspense>
+    <DocsLayout {...layoutOptions} tree={pageTree}>
+      <Content path={path} />
     </DocsLayout>
   )
 }

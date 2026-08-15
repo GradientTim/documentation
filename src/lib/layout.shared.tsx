@@ -1,8 +1,11 @@
-import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared'
-
+import type { BaseLayoutProps } from '@fumadocs/base-ui/layouts/shared'
 import { GithubInfo } from '@fumadocs/base-ui/components/github-info'
 
-export function baseOptions(): BaseLayoutProps {
+import { SiBluesky } from '@icons-pack/react-simple-icons'
+
+const projects: string[] = ['gradeway']
+
+export function baseOptions(project: string | undefined): BaseLayoutProps {
   return {
     nav: {
       title: 'GadientTim Docs',
@@ -10,8 +13,20 @@ export function baseOptions(): BaseLayoutProps {
     githubUrl: 'https://github.com/GradientTim',
     links: [
       {
+        type: 'icon',
+        icon: <SiBluesky />,
+        text: 'bluesky',
+        url: 'https://bsky.app/profile/gradienttim.dev',
+        external: true,
+      },
+      {
         type: 'custom',
-        children: <GithubInfo owner="GradientTim" repo="documentation" />,
+        children: (
+          <GithubInfo
+            owner="GradientTim"
+            repo={project && projects.includes(project) ? project : 'documentation'}
+          />
+        ),
       },
     ],
   }

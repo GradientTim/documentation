@@ -23,10 +23,19 @@ Set `messaging.enabled` to `true` in `config.toml`, and set the driver's ID in `
 
 ## Encryption
 
-Some messaging drivers display a warning if encryption is not enabled, as this could result in incorrect or corrupted payload data being sent to Gradeway.
-The encryption feature can be enabled for any messaging driver.
+Some messaging drivers display a warning if neither encryption nor signing is enabled, as this
+could result in payload data being readable by anyone who can observe the underlying transport
+(e.g. another client subscribed to the same Redis/Postgres channel), or forged/tampered with
+undetected. The encryption feature can be enabled for any messaging driver.
 
-Encryption is highly recommended if the warning appears and Gradeway is being used in a production system.
+Encryption uses AES-GCM, so a payload encrypted this way is both confidential and authenticated:
+Gradeway also rejects a payload that was tampered with or wasn't encrypted with the same key,
+without needing anything else configured. Encryption is highly recommended if the warning appears
+and Gradeway is being used in a production system.
+
+If you want payloads to stay readable (for example while debugging with `LISTEN`/`NOTIFY`) but
+still want tampered or forged payloads rejected, see [Signing](#signing) instead, it can be used
+on its own or together with encryption.
 
 ### Generate a random secret [step]
 
@@ -45,7 +54,7 @@ The command above will generate a random Base64 text that looks like this:
   [messaging.variables]
     # ...
     GRADEWAY_ENCRYPTION_ENABLED = true
-    GRADEWAY_ENCRYPTION_SECRET = "PASTE_THE_SECRET_FROM_STEP_1"
+    GRADEWAY_ENCRYPTION_KEY = "PASTE_THE_SECRET_FROM_STEP_1"
 ```
 
 <Callout type="warn">
@@ -55,4 +64,70 @@ The command above will generate a random Base64 text that looks like this:
 
 ### Start the server / proxy [step]
 
-After you start your server or proxy, messaging will work just as it did before – except that the payloads will now be encrypted.
+After you start your server or proxy, messaging will work just as it did before, except that the
+payloads will now be encrypted.
+
+## Signing
+
+Signing proves that a real-time update payload was produced by someone holding the shared signing
+key, and that it wasn't altered in transit, without hiding the payload's contents. This is useful
+when you want to reject forged or tampered payloads but don't need (or don't want) the payload
+itself to be unreadable, for example while inspecting messages directly on the broker with
+`LISTEN`/`NOTIFY` or a Redis client.
+
+If you also need the payload's contents to stay confidential, see [Encryption](#encryption)
+instead. Encryption already authenticates payloads on its own (it uses AES-GCM), so signing isn't
+required for that. Signing and encryption are independent, you can enable either one on its own,
+or both together for defense-in-depth.
+
+### Generate a random secret [step]
+
+```shell
+openssl rand -base64 16
+```
+
+The command above will generate a random Base64 text that looks like this:
+`YAYDeuwpdh6Y9toYDN+C2Q==`
+
+### Configure the Environment [step]
+
+```toml title="config.toml"
+[messaging]
+  # ...
+  [messaging.variables]
+    # ...
+    GRADEWAY_SIGNING_ENABLED = true
+    GRADEWAY_SIGNING_KEY = "PASTE_THE_SECRET_FROM_STEP_1"
+```
+
+<Callout type="warn">
+  **This configuration must now be added wherever Gradeway is used; otherwise, the data for
+  real-time updates will be skipped when the payloads cannot be successfully verified.**
+</Callout>
+
+### Start the server / proxy [step]
+
+After you start your server or proxy, messaging will work just as it did before, except that the
+payloads will now carry a signature that's verified on the receiving end.
+
+## Signing and Encryption Together
+
+If both are enabled, Gradeway encrypts a payload first and then signs the resulting ciphertext, so
+a forged or tampered payload is rejected by the signature check alone, without ever attempting to
+decrypt it. Both variables need their own key:
+
+```toml title="config.toml"
+[messaging]
+  # ...
+  [messaging.variables]
+    # ...
+    GRADEWAY_ENCRYPTION_ENABLED = true
+    GRADEWAY_ENCRYPTION_KEY = "PASTE_A_SECRET_HERE"
+    GRADEWAY_SIGNING_ENABLED = true
+    GRADEWAY_SIGNING_KEY = "PASTE_A_DIFFERENT_SECRET_HERE"
+```
+
+<Callout type="idea">
+  Since encryption already authenticates its payloads, combining it with signing is optional
+  defense-in-depth rather than a requirement, most setups only need one or the other.
+</Callout>

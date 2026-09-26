@@ -1,0 +1,129 @@
+---
+title: Types
+description: The value types BuildMeta supports and how to add your own.
+icon: Braces
+---
+
+## Built-in types
+
+The type of a field is taken from its resolved value. The following types are supported out of the box:
+
+| Type                       | Java | Kotlin JVM | Kotlin Multiplatform | Constant |
+|----------------------------|:----:|:----------:|:--------------------:|:--------:|
+| `String`                   |  ✓   |     ✓      |          ✓           |    ✓     |
+| `Char`                     |  ✓   |     ✓      |          ✓           |    ✓     |
+| `Int`, `Long`              |  ✓   |     ✓      |          ✓           |    ✓     |
+| `Double`, `Float`          |  ✓   |     ✓      |          ✓           |    ✓     |
+| `Boolean`                  |  ✓   |     ✓      |          ✓           |    ✓     |
+| `kotlin.uuid.Uuid`         |      |     ✓      |          ✓           |          |
+| `kotlin.time.Duration`     |      |     ✓      |          ✓           |          |
+| `kotlin.time.Instant`      |      |     ✓      |          ✓           |          |
+| `java.util.UUID`           |  ✓   |     ✓      |                      |          |
+| `java.time.Duration`       |  ✓   |     ✓      |                      |          |
+| `java.time.Instant`        |  ✓   |     ✓      |                      |          |
+| `java.time.LocalDate`      |  ✓   |     ✓      |                      |          |
+| `java.time.LocalTime`      |  ✓   |     ✓      |                      |          |
+| `java.time.LocalDateTime`  |  ✓   |     ✓      |                      |          |
+| `java.time.OffsetDateTime` |  ✓   |     ✓      |                      |          |
+| `java.time.ZonedDateTime`  |  ✓   |     ✓      |                      |          |
+
+Constant types become `const val` in Kotlin and compile-time constants in Java. All other types are regular
+fields initialized with a parse call, e.g. `Uuid.parse("...")` or `Instant.parse("...")`.
+
+<Callout type="idea">
+  Fields using `Uuid` or `kotlin.time.Instant` add the required `@file:OptIn(...)` annotation to the generated file
+  automatically.
+</Callout>
+
+## Custom type adapters
+
+For any other type, register a type adapter in the `typeAdapters` block. A type adapter turns a value into the
+source code expression that recreates it.
+
+The quickest way is a lambda:
+
+```kotlin title="build.gradle.kts"
+import dev.gradienttim.buildmeta.codegen.data.Literals
+
+buildMeta {
+    typeAdapters {
+        register(Regex::class.java) { "Regex(${Literals.kotlinString(it.pattern)})" }
+    }
+
+    main {
+        field("usernamePattern", Regex("[a-z]+"))
+    }
+}
+```
+
+`register` also takes `needsImport` (default `true`) to import the type in the generated file, `constant`
+(default `false`) to generate the field as a constant, and `typeName` (default: the simple class name) to write a
+different type into the generated file, for example a generic one:
+
+```kotlin title="build.gradle.kts"
+buildMeta {
+    typeAdapters {
+        register(List::class.java, needsImport = false, typeName = "List<String>") { list ->
+            "listOf(${list.joinToString { Literals.kotlinString(it.toString()) }})"
+        }
+    }
+
+    main {
+        field("supportedLocales", listOf("en", "de"))
+    }
+}
+```
+
+For more control, extend `DataType`:
+
+```kotlin title="build.gradle.kts"
+import dev.gradienttim.buildmeta.codegen.data.DataType
+import dev.gradienttim.buildmeta.codegen.data.Literals
+import java.net.URI
+
+buildMeta {
+    typeAdapters {
+        register(UriDataType)
+    }
+
+    main {
+        field("website", URI("https://docs.gradienttim.dev/buildmeta"))
+    }
+}
+
+object UriDataType : DataType<URI>() {
+    override val classType: Class<URI> = URI::class.java
+    override val needsImport: Boolean = true
+
+    override fun format(value: URI): String = "URI.create(${Literals.kotlinString(value.toString())})"
+}
+```
+
+| Member        | Description                                                                             |
+|---------------|-----------------------------------------------------------------------------------------|
+| `classType`   | The type this adapter handles. Values that are an instance of it use this adapter.      |
+| `needsImport` | Whether the type is imported in the generated file.                                     |
+| `constant`    | Whether the field is generated as a constant. Defaults to `false`.                      |
+| `optIns`      | Opt-in annotations the generated file needs (Kotlin only). Defaults to none.            |
+| `typeName`    | The type written into the generated file. Defaults to the simple name of `classType`.   |
+| `format`      | Returns the source code expression for a value.                                         |
+| `formatText`  | Returns the plain text used for [placeholders](/buildmeta/placeholders). Defaults to `toString()`. |
+
+### Escaping strings
+
+Never put a value into a string literal by hand: a `"`, `\` or `$` in it breaks the generated file. `Literals` returns
+correctly escaped and quoted literals:
+
+| Function                                           | Result for `a"b`      |
+|----------------------------------------------------|-----------------------|
+| `Literals.kotlinString(value)`                     | `"a\"b"`              |
+| `Literals.javaString(value)`                       | `"a\"b"`              |
+| `Literals.kotlinChar(char)` / `Literals.javaChar(char)` | a quoted char literal |
+
+`kotlinString` also escapes `$`, so string templates in values are kept as text. From Groovy, call them the same way,
+e.g. `Literals.javaString(it.pattern())`.
+
+<Callout type="warn">
+  Only one adapter per type can be registered. Your own adapters are checked before the built-in ones, so you can
+  also use them to change how a built-in type is generated.
+</Callout>

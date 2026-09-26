@@ -1,0 +1,77 @@
+---
+title: BuildMeta
+description: A Gradle plugin to generate build meta files for Kotlin (JVM / Multiplatform) and Java applications.
+icon: FileCodeCorner
+---
+
+## What is BuildMeta?
+
+BuildMeta generates type-safe source files from values declared in your build script. Your application name,
+version, git commit or any other build-time value ends up as a plain constant you can read at runtime, without
+parsing resource files or using reflection.
+
+```kotlin tab="build.gradle.kts"
+buildMeta {
+    main {
+        field("appName", "ExampleApp")
+        field("appVersion", "1.0.0")
+    }
+}
+```
+
+```kotlin tab="BuildMeta.kt (generated)"
+package com.example.generated.buildmeta
+
+public object BuildMeta {
+    public const val appName: String = "ExampleApp"
+    public const val appVersion: String = "1.0.0"
+}
+```
+
+## Use this if ...
+
+- You want build values (version, commit hash, build user, ...) available as **typed constants** in your code.
+- You build with **Java**, **Kotlin JVM** or **Kotlin Multiplatform** and want one plugin for all of them.
+- You want to split values into **multiple generated files**, each with its own package, name and naming strategy.
+- You want the same values written into **resource files** (`.properties`, `.yml`, ...) via placeholders.
+- You care about **configuration cache** and **isolated projects** support.
+
+## Questions and Answers
+
+**1. Which Gradle version is required?**
+
+- Gradle **9.7** or newer.
+
+**2. Which project types are supported?**
+
+- _Java_ (`java`), _Kotlin JVM_ (`org.jetbrains.kotlin.jvm`) and _Kotlin Multiplatform_
+  (`org.jetbrains.kotlin.multiplatform`). One of them must be applied, otherwise the build fails.
+
+**3. Which value types are supported?**
+
+- Strings, chars, numbers, booleans, UUIDs, durations, instants and (on the JVM) the `java.time` types.
+  Anything else can be added with a [type adapter](/buildmeta/types#custom-type-adapters).
+
+**4. Does it work with the configuration cache?**
+
+- Yes. Read the [field values](/buildmeta/usage#field-values) section to pick the right way to pass values
+  that come from outside the build, such as git.
+
+**5. Is BuildMeta free and open-source?**
+
+- Sure, **always** free and [open-source](https://github.com/GradientTim/buildmeta) :)
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Installation"
+    description="Learn how to add BuildMeta to your build."
+    href="/buildmeta/install"
+  />
+  <Card
+    title="Usage"
+    description="Learn how to declare fields and use the generated files."
+    href="/buildmeta/usage"
+  />
+</Cards>

@@ -3,6 +3,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { createFileRoute, notFound } from '@tanstack/react-router'
 
 import { DocsLayout } from '@fumadocs/base-ui/layouts/notebook'
+import { getLayoutTabs } from '@fumadocs/base-ui/layouts/shared'
 import { useFumadocsLoader } from 'fumadocs-core/source/client'
 
 import {
@@ -85,8 +86,16 @@ function Page() {
     return baseOptions(project)
   }, [path])
 
+  // Project folders are left out of the root meta.json so they don't show up in the
+  // root sidebar, which makes fumadocs mark them as "unlisted" and hide them from the
+  // project dropdown unless active. Force them to be listed so every project is selectable.
+  const tabs = useMemo(
+    () => getLayoutTabs(pageTree).map((tab) => ({ ...tab, unlisted: false })),
+    [pageTree],
+  )
+
   return (
-    <DocsLayout {...layoutOptions} tree={pageTree}>
+    <DocsLayout {...layoutOptions} tree={pageTree} tabs={tabs}>
       <Content path={path} />
     </DocsLayout>
   )

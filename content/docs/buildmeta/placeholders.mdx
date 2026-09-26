@@ -1,0 +1,56 @@
+---
+title: Placeholders
+description: Write BuildMeta field values into resource files.
+icon: Replace
+---
+
+Field values can also be written into resource files (`src/main/resources`, or `src/commonMain/resources` for
+Kotlin Multiplatform) while they are copied into the build output:
+
+```properties title="src/main/resources/app.properties"
+app.name={{buildMeta:appName}}
+git.commit={{buildMeta:gitMeta.commitHash}}
+docs.example=\{{buildMeta:appName}}
+```
+
+After `processResources`, the file in the build output contains the resolved values:
+
+```properties
+app.name=ExampleApp
+git.commit=a1b2c3d
+docs.example={{buildMeta:appName}}
+```
+
+## Rules
+
+- `{{buildMeta:<field>}}` reads a field of the `main` BuildMeta, `{{buildMeta:<buildMeta>.<field>}}` any other one.
+- Fields are referenced by the name they were declared with, not by the name after the naming strategy.
+- A `\` in front of the prefix keeps the placeholder as literal text. Use `\\` for a real `\` followed by the
+  value, e.g. `C:\app\\{{buildMeta:appName}}` becomes `C:\app\ExampleApp`. In general, every pair of `\` before the
+  prefix becomes one `\`, and an odd one left over keeps the placeholder as text.
+- An unknown placeholder fails the build.
+- Binary files (images, fonts, archives, ...) are always skipped, even when they match `include(...)`. Files without a
+  placeholder are copied unchanged.
+
+## Configuration
+
+```kotlin title="build.gradle.kts"
+buildMeta {
+    placeholders {
+        prefix = "{{buildMeta:"
+        suffix = "}}"
+        include("**/*.properties", "**/*.yml")
+        exclude("**/secrets/**")
+    }
+}
+```
+
+| Property / Method | Description                                  | Default        |
+|-------------------|----------------------------------------------|----------------|
+| `prefix`          | Text that starts a placeholder               | `{{buildMeta:` |
+| `suffix`          | Text that ends a placeholder                 | `}}`           |
+| `include(...)`    | Only process files matching these patterns   | All files      |
+| `exclude(...)`    | Skip files matching these patterns           | None           |
+
+`include` and `exclude` take the same Ant-style patterns as Gradle's `copy { }`. Without `include`, all non-binary
+files are processed.

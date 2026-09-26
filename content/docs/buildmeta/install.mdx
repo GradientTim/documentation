@@ -1,0 +1,46 @@
+---
+title: Install
+description: A guide on how to install the BuildMeta Gradle plugin.
+icon: Download
+---
+
+BuildMeta is published on the **Gradle Plugin Portal** and requires **Gradle 9.7** or newer.
+
+![Gradle Plugin Portal Version](https://img.shields.io/gradle-plugin-portal/v/dev.gradienttim.buildmeta?style=flat-square)
+
+Apply it next to the Java, Kotlin JVM or Kotlin Multiplatform plugin:
+
+```kotlin tab="build.gradle.kts"
+plugins {
+    kotlin("jvm") version "KOTLIN_VERSION" // or java / kotlin("multiplatform")
+    id("dev.gradienttim.buildmeta") version "VERSION"// [!code focus]
+}
+```
+
+```groovy tab="build.gradle"
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version 'KOTLIN_VERSION' // or java / org.jetbrains.kotlin.multiplatform
+    id 'dev.gradienttim.buildmeta' version 'VERSION'// [!code focus]
+}
+```
+
+<Callout type="warn">
+  Without the `java`, `org.jetbrains.kotlin.jvm` or `org.jetbrains.kotlin.multiplatform` plugin the build fails as
+  soon as the BuildMeta sources are resolved.
+</Callout>
+
+## Where the sources go
+
+The generated sources are added to the source set automatically, so no further setup is needed:
+
+| Project type         | Source set   | Output directory                               |
+|----------------------|--------------|------------------------------------------------|
+| Java                 | `main`       | `build/generated/buildmeta/java/<buildMeta>`   |
+| Kotlin JVM           | `main`       | `build/generated/buildmeta/kotlin/<buildMeta>` |
+| Kotlin Multiplatform | `commonMain` | `build/generated/buildmeta/kotlin/<buildMeta>` |
+
+<Callout type="idea">
+  On Kotlin Multiplatform the files are also generated during IDE sync, so the IDE resolves them right away. For Java
+  and Kotlin JVM, run `generateBuildMeta` once, or in IntelliJ right-click the task in the Gradle tool window and pick
+  **Execute After Sync**.
+</Callout>

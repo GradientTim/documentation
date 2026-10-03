@@ -125,6 +125,11 @@ import com.example.generated.git.GitMeta
 println("Commit=${GitMeta.COMMIT_HASH} | IsDirty=${GitMeta.IS_DIRTY}")
 ```
 
+<Callout type="idea">
+  For common values like git, project, CI and environment details, the [helpers](/buildmeta/helpers) register a
+  complete BuildMeta with a single call, e.g. `registerGitMeta()`.
+</Callout>
+
 ## Defaults
 
 The extension provides fallbacks that every BuildMeta uses unless it sets its own value:

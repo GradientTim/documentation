@@ -3,5 +3,5 @@
   "description": "A Gradle plugin to generate build meta files for Kotlin (JVM / Multiplatform) and Java applications.",
   "icon": "FileCodeCorner",
   "root": true,
-  "pages": ["index", "install", "usage", "types", "placeholders"]
+  "pages": ["index", "install", "usage", "helpers", "types", "placeholders"]
 }

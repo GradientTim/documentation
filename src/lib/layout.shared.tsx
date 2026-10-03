@@ -3,7 +3,7 @@ import { GithubInfo } from '@fumadocs/base-ui/components/github-info'
 
 import { SiBluesky } from '@icons-pack/react-simple-icons'
 
-const projects: string[] = ['gradeway']
+const projects: string[] = ['gradeway', 'buildmeta']
 
 export function baseOptions(project: string | undefined): BaseLayoutProps {
   return {

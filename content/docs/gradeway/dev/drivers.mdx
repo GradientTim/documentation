@@ -174,6 +174,11 @@ settings from environment variables. Its helpers (`string`, `stringRequired`, `s
 this lets you support both a generic name (e.g. `GRADEWAY_DATABASE_FILE`) and a driver-specific
 alias (e.g. `GRADEWAY_SQLITE_FILE`).
 
+Database and messaging drivers share the same `Environment` instance (`GradewayLifecycle.environment`).
+A name is resolved from Gradeway's `.env` file first, then from JVM system properties (`-Dkey=value`)
+and finally from the system environment, see
+[Environment variables](/gradeway/admin/configure#environment-variables).
+
 ## Example: a SQLite driver
 
 Here's the complete `driver-database-sqlite` module, the simplest database driver shipped with
@@ -206,5 +211,5 @@ dependencies {
 ```
 
 Once built and dropped into `drivers/`, this driver becomes selectable by setting
-`database.driver = "sqlite"` in `config.toml` - see [Configuration](/gradeway/admin/configure)
+`database.driver = "sqlite"` in `drivers.toml` - see [Configuration](/gradeway/admin/configure)
 for the full set of database options.

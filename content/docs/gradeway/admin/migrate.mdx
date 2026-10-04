@@ -6,7 +6,7 @@ description: A guide on how to migrate data from another permission plugin into 
 Migration is how you move an existing permission setup into Gradeway from another plugin, it's a
 one-time, one-way import rather than an ongoing sync. A **migration strategy** knows how to read
 one specific plugin's export format and translate it into Gradeway's data model (roles, players,
-groups, permissions and attributes). Gradeway ships with official strategies out of the box, and
+groups, tracks, permissions and attributes). Gradeway ships with official strategies out of the box, and
 extensions can register additional ones, see [Building a Migration Strategy](/gradeway/dev/strategies)
 if you want to write your own.
 
@@ -27,7 +27,7 @@ The general flow is the same for every strategy:
 
 | ID          | Plugin                              | Notes                                                                                        |
 | ----------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `luckperms` | [LuckPerms](https://luckperms.net/) | Imports groups, users, permissions, inheritance, prefixes/suffixes and weights. Tracks are skipped. |
+| `luckperms` | [LuckPerms](https://luckperms.net/) | Imports groups, users, permissions, inheritance, prefixes/suffixes, weights and tracks. |
 
 <Callout type="idea">
   Migrating from a plugin that isn't listed here? See
@@ -81,7 +81,10 @@ This queues a job, run `/gradeway confirm <jobId>` to actually execute it, see
 | `suffix.<priority>.<value>` node     | `gradeway:suffix` attribute (highest priority wins)                       |
 | `displayname.<value>` node           | `gradeway:display_name` attribute                                         |
 | `weight.<value>` node                | Entity weight (highest value wins)                                        |
-| Track                                | Not supported, skipped with a warning in the console                      |
+| `default` group                      | Role flagged as the [default role](/gradeway/admin/configure#default-role) |
+| Track                                | Track named after the LuckPerms track, its groups become stages in order |
+| Track with a name over 20 characters | Skipped with a warning in the console                                     |
+| Unknown group inside a track         | Skipped with a warning in the console                                     |
 | Any other node type                  | Skipped with a warning in the console                                     |
 
 </Tab>

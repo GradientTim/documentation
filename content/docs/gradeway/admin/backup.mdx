@@ -14,9 +14,19 @@ can restore from later, whether that's recovering from a mistake or moving data 
 ```
 
 This reads every table straight out of the database and writes it into a `.tar.gz` archive named
-after the current date and time (for example `2026-08-14_12-30-00.tar.gz`), one JSON file per
-table inside the archive. The file is saved into the `backups` folder inside Gradeway's data
-directory (`plugins/gradeway/backups/`), created automatically the first time you run an export.
+after the current date and time (for example `2026-08-14_12-30-00.tar.gz`). The file is saved into
+the `backups` folder inside Gradeway's data directory (`plugins/gradeway/backups/`), created
+automatically the first time you run an export.
+
+The archive contains:
+
+- `manifest.json` - the backup format version, the Gradeway version that created it, the creation
+  time and the number of rows exported per table.
+- One `<table>.jsonl` file per table, holding one JSON object per line.
+
+Rows are streamed in batches instead of being loaded into memory at once, and the archive is first
+written to a temporary file that is only renamed once it's complete, so an export that fails
+halfway never leaves a broken archive behind.
 
 <Callout type="idea">
   Exporting doesn't touch your existing data at all, it's safe to run at any time, including
@@ -24,7 +34,7 @@ directory (`plugins/gradeway/backups/`), created automatically the first time yo
 </Callout>
 
 <Callout type="tip">
-  Alternatively, you can create a database dump directly in your Dantebank and restore it directly back into the database.
+  Alternatively, you can create a database dump directly in your database and restore it directly back into the database.
 </Callout>
 
 ## Importing
@@ -49,10 +59,27 @@ Every server or proxy sharing a database (or connected over [messaging](/gradewa
 has its caches fully flushed once an import completes, so the restored data takes effect
 everywhere immediately.
 
+### Verification
+
+When the archive contains a `manifest.json`, Gradeway checks it while importing:
+
+- A backup created with a **newer format version** than the running Gradeway supports is rejected
+  instead of being imported partially. Update Gradeway first.
+- If a table listed in the manifest is missing from the archive, or a table contains a different
+  number of rows than the manifest expects, the import fails as a corrupt archive.
+
+Since the import runs inside a single database transaction, a failed import doesn't leave your
+database half-restored.
+
+<Callout type="idea">
+  Backups created by older Gradeway versions (one `<table>.json` array per table, no manifest) can
+  still be imported, they're just not verified against a manifest.
+</Callout>
+
 ### Decompression size limit
 
 To protect against decompression-bomb archives, only files whose decompressed content stays under
-`backup.maxImportSizeBytes` (2 GiB by default) are accepted, imports past that limit fail instead
+`maxImportSizeBytes` in `config.toml` (2 GiB by default) are accepted, imports past that limit fail instead
 of consuming unbounded memory. Raise this in your [configuration](/gradeway/admin/configure) if you
 have a legitimately large dataset and imports are being rejected.
 

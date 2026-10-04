@@ -11,10 +11,11 @@ For example, if Player A is connected to the lobby and an admin modifies Player 
 ## Activate and Configure
 
 Make sure that a messaging driver is located in the `drivers` folder and that it can be loaded successfully.
+Its connection settings are read from environment variables, see [Configuration](/gradeway/admin/configure#environment-variables).
 
-Set `messaging.enabled` to `true` in `config.toml`, and set the driver's ID in `messaging.driver`. The configuration file should now look like this:
+Set `messaging.enabled` to `true` in `drivers.toml`, and set the driver's ID in `messaging.driver`. The configuration file should now look like this:
 
-```toml [config.toml]
+```toml title="drivers.toml"
 [messaging]
   enabled = true
   # replace the driver id with the one you have installed and configured
@@ -48,17 +49,16 @@ The command above will generate a random Base64 text that looks like this:
 
 ### Configure the Environment [step]
 
-```toml title="config.toml"
-[messaging]
-  # ...
-  [messaging.variables]
-    # ...
-    GRADEWAY_ENCRYPTION_ENABLED = true
-    GRADEWAY_ENCRYPTION_KEY = "PASTE_THE_SECRET_FROM_STEP_1"
+Add the following variables to the `.env` file inside Gradeway's data directory
+(`plugins/gradeway/.env`), or define them as system environment variables:
+
+```dotenv title=".env"
+GRADEWAY_ENCRYPTION_ENABLED=true
+GRADEWAY_ENCRYPTION_KEY=PASTE_THE_SECRET_FROM_STEP_1
 ```
 
 <Callout type="warn">
-  **This configuration must now be added wherever Gradeway is used; otherwise, the data for
+  **These variables must now be defined wherever Gradeway is used; otherwise, the data for
   real-time updates will be skipped when the payloads cannot be successfully verified / decrypted.**
 </Callout>
 
@@ -91,17 +91,16 @@ The command above will generate a random Base64 text that looks like this:
 
 ### Configure the Environment [step]
 
-```toml title="config.toml"
-[messaging]
-  # ...
-  [messaging.variables]
-    # ...
-    GRADEWAY_SIGNING_ENABLED = true
-    GRADEWAY_SIGNING_KEY = "PASTE_THE_SECRET_FROM_STEP_1"
+Add the following variables to the `.env` file inside Gradeway's data directory
+(`plugins/gradeway/.env`), or define them as system environment variables:
+
+```dotenv title=".env"
+GRADEWAY_SIGNING_ENABLED=true
+GRADEWAY_SIGNING_KEY=PASTE_THE_SECRET_FROM_STEP_1
 ```
 
 <Callout type="warn">
-  **This configuration must now be added wherever Gradeway is used; otherwise, the data for
+  **These variables must now be defined wherever Gradeway is used; otherwise, the data for
   real-time updates will be skipped when the payloads cannot be successfully verified.**
 </Callout>
 
@@ -116,15 +115,11 @@ If both are enabled, Gradeway encrypts a payload first and then signs the result
 a forged or tampered payload is rejected by the signature check alone, without ever attempting to
 decrypt it. Both variables need their own key:
 
-```toml title="config.toml"
-[messaging]
-  # ...
-  [messaging.variables]
-    # ...
-    GRADEWAY_ENCRYPTION_ENABLED = true
-    GRADEWAY_ENCRYPTION_KEY = "PASTE_A_SECRET_HERE"
-    GRADEWAY_SIGNING_ENABLED = true
-    GRADEWAY_SIGNING_KEY = "PASTE_A_DIFFERENT_SECRET_HERE"
+```dotenv title=".env"
+GRADEWAY_ENCRYPTION_ENABLED=true
+GRADEWAY_ENCRYPTION_KEY=PASTE_A_SECRET_HERE
+GRADEWAY_SIGNING_ENABLED=true
+GRADEWAY_SIGNING_KEY=PASTE_A_DIFFERENT_SECRET_HERE
 ```
 
 <Callout type="idea">

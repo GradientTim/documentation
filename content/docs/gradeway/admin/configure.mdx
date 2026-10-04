@@ -3,7 +3,67 @@ title: Configuration
 description: A guide on how to correctly configure Gradeway as a server administrator.
 ---
 
+Gradeway splits its configuration into three TOML files, all created inside Gradeway's data
+directory (`plugins/gradeway/`) the first time it loads:
+
+| File            | Purpose                                                                          |
+| --------------- | -------------------------------------------------------------------------------- |
+| `config.toml`   | General settings: message appearance, import limits and default role handling.   |
+| `drivers.toml`  | Which database and messaging [drivers](/gradeway/admin/drivers) to use.          |
+| `platform.toml` | Settings that only apply to the platform you're running (Paper, Velocity, ...).  |
+| `.env`          | Connection credentials and other variables read by the drivers (create it yourself). |
+
+Every TOML file carries a `version` field. Gradeway bumps it automatically when a newer release
+adds options, so you don't need to touch it yourself.
+
+## config.toml
+
 ```toml title="config.toml"
+version = 2
+# Defines the prefix that is prepended to messages sent by Gradeway.
+# Supports MiniMessage formatting.
+prefix = "<gradient:#ed751f:#e89e1e>Gradeway</gradient> <dark_gray>›</dark_gray> "
+# Defines the primary color used throughout Gradeway messages.
+# Must be a hex color code.
+primaryColor = "#ed751f"
+# Defines the secondary color used throughout Gradeway messages.
+# Must be a hex color code.
+secondaryColor = "#e89e1e"
+# Defines the maximum decompressed size, in bytes, allowed when importing a backup or migration file.
+# Protects against decompression-bomb archives that expand to consume excessive memory once decompressed.
+# Increase this if your server has a very large dataset and legitimate imports are being rejected.
+maxImportSizeBytes = 2147483648
+
+# Controls when players automatically receive the default role.
+# The default role is selected with '/gradeway role default set <role>'.
+[defaultRole]
+  # Assigns the default role to players when they join for the first time
+  # and also makes it their primary role.
+  assignOnFirstJoin = true
+  # Assigns the default role on every join to players who have no primary role.
+  # This also covers existing players, but re-applies the default role after
+  # their primary role has been cleared.
+  assignWhenNoPrimaryRole = false
+```
+
+### Default role
+
+The **default role** is handed out to players automatically when they join, and becomes their
+primary role. Pick it with `/gradeway role default set <role>`, see
+[Commands](/gradeway/commands#default-role).
+
+- `assignOnFirstJoin` gives the default role to players joining for the very first time.
+- `assignWhenNoPrimaryRole` additionally gives it, on every join, to any player without a primary
+  role. This also covers players that already existed before you configured a default role.
+
+<Callout type="idea">
+  If several roles are flagged as default (`/gradeway role modify <role> setDefault true`), the one
+  with the highest weight is used, ties are broken by name.
+</Callout>
+
+## drivers.toml
+
+```toml title="drivers.toml"
 version = 1
 
 [database]
@@ -14,12 +74,6 @@ version = 1
   # Set the value to an empty string to not use a prefix.
   prefix = "gradeway_"
 
-  # Defines variables for the database connection of the driver.
-  # Each available driver should expose its available environment variables you can use here.
-  # When a variable in the driver is not set and has not a default fallback, an error will be thrown.
-  # You can decide of defining the variables here or inside the .env file / current application.
-  [database.variables]
-
 [messaging]
   # Controls whether messaging should be enabled or disabled.
   # If messaging is disabled, data can no longer be synchronized in real time.
@@ -27,42 +81,64 @@ version = 1
   # Defines the type of messaging service.
   # Use the 'id' of the installed messaging driver.
   driver = ""
-
-  # Defines variables for the messaging connection of the driver.
-  # Each available driver should expose its available environment variables you can use here.
-  # When a variable in the driver is not set and has not a default fallback, an error will be thrown.
-  # You can decide of defining the variables here or inside the .env file / current application.
-  [messaging.variables]
-
-[appearance]
-  # Defines the prefix that is prepended to messages sent by Gradeway.
-  # Supports MiniMessage formatting.
-  prefix = "<gradient:#ed751f:#e89e1e>Gradeway</gradient> <dark_gray>›</dark_gray> "
-  # Defines the primary color used throughout Gradeway messages.
-  # Must be a hex color code.
-  primaryColor = "#ed751f"
-  # Defines the secondary color used throughout Gradeway messages.
-  # Must be a hex color code.
-  secondaryColor = "#e89e1e"
-
-[backup]
-  # Defines the maximum decompressed size, in bytes, allowed when importing a backup or migration file.
-  # Protects against decompression-bomb archives that expand to consume excessive memory once decompressed.
-  # Increase this if your server has a very large dataset and legitimate imports are being rejected.
-  maxImportSizeBytes = 2147483648
-
-[env]
-  # Specifies where Gradeway should find the .env file containing the credentials.
-  # By default, the file is located in the same directory as this configuration file.
-  # If the path is changed, make sure that Gradeway or the application itself has access to this file so it can read its contents.
-  file = "./.env"
-  # If this option is enabled, Gradeway will attempt to read environment variables from the configured .env file above.
-  # Variables found in the .env file will override Variables defined in the Gradeway configuration.
-  readFromFile = true
-  # If this option is enabled, Gradeway will attempt to read environment variables from global system environment variables.
-  readFromSystem = false
-  # If this option is enabled, Gradeway will attempt to read environment variables from the running application that defines properties via the '-Dkey=value' flag.
-  readFromProperties = false
-
-[platform]
 ```
+
+## platform.toml
+
+The content of `platform.toml` depends on the platform Gradeway runs on.
+
+<Tabs items={['Paper / Bukkit', 'Velocity', 'BungeeCord']}>
+<Tab value="Paper / Bukkit">
+
+```toml title="platform.toml"
+version = 1
+# When enabled, server operators will not have access to all permission protected commands.
+disableOp = true
+```
+
+</Tab>
+<Tab value="Velocity">
+
+```toml title="platform.toml"
+version = 1
+```
+
+</Tab>
+<Tab value="BungeeCord">
+
+```toml title="platform.toml"
+version = 1
+```
+
+</Tab>
+</Tabs>
+
+## Environment variables
+
+Drivers read their connection settings (host, port, credentials, encryption keys, ...) from
+environment variables, see [Drivers](/gradeway/admin/drivers) for the variables each driver
+supports. Gradeway looks a variable up in the following sources, the first one that defines it
+wins:
+
+1. The `.env` file inside Gradeway's data directory (`plugins/gradeway/.env`).
+2. JVM system properties, passed with `-Dkey=value` when starting the server or proxy.
+3. The system environment variables of the running process.
+
+```dotenv title=".env"
+GRADEWAY_DATABASE_HOST=localhost
+GRADEWAY_DATABASE_PORT=5432
+GRADEWAY_DATABASE_NAME=gradeway
+GRADEWAY_DATABASE_USER=gradeway
+GRADEWAY_DATABASE_PASSWORD=change-me
+```
+
+<Callout type="warn">
+  The `.env` file contains credentials. Make sure only the user running the server or proxy can
+  read it, and never commit it to a public repository.
+</Callout>
+
+<Callout type="info">
+  Upgrading from **0.2.x**? The `[database.variables]`, `[messaging.variables]` and `[env]`
+  sections are gone. Move your variables into `plugins/gradeway/.env` (or the system environment),
+  and move your `database`/`messaging` settings from `config.toml` into `drivers.toml`.
+</Callout>

@@ -6,9 +6,11 @@ description: A list of official and community database and messaging drivers for
 Gradeway needs a **database driver** to store its data, and optionally a **messaging driver** to
 sync data in real time across servers, see [Messaging](/gradeway/admin/messaging). Drop the
 driver's `.jar` into the `drivers/` folder and set its `id` as `database.driver` or
-`messaging.driver` in `config.toml`, see [Configuration](/gradeway/admin/configure).
+`messaging.driver` in `drivers.toml`, see [Configuration](/gradeway/admin/configure).
 
-Each driver reads its connection settings from environment variables. Every driver exposes a
+Each driver reads its connection settings from environment variables, defined in the `.env` file
+inside Gradeway's data directory, as JVM system properties or as system environment variables, see
+[Environment variables](/gradeway/admin/configure#environment-variables). Every driver exposes a
 generic name (e.g. `GRADEWAY_DATABASE_HOST`) alongside a driver-specific alias (e.g.
 `GRADEWAY_POSTGRES_HOST`), whichever is set first wins. A variable marked **required** has no
 fallback and must be set, otherwise Gradeway throws an error on load; a variable marked

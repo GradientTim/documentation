@@ -30,7 +30,7 @@ class MyClass : KoinComponent {
 
 ## Accessing the Lifecycle
 
-The `Gradeway` instance gives you basic access to Gradeway features such as **players**, **roles**, **permissions**, **groups** and **attributes**.
+The `Gradeway` instance gives you basic access to Gradeway features such as **players**, **roles**, **permissions**, **groups**, **tracks** and **attributes**.
 In addition to this instance, there is also a Lifecycle instance that includes additional features, but you will probably rarely need to use it.
 
 The Lifecycle instance contains some internal management functions that are not strictly necessary for normal use of the API. **Please use this with caution.**
@@ -47,4 +47,60 @@ gradeway.logger.info("Hello from GradewayLifecycle!")
 
 // imagine calling this every second...
 gradeway.caches.invalidateAll()
+
+val directory = gradeway.directory // java.nio.file.Path of Gradeway's data directory
+val databaseHost = gradeway.environment.string("GRADEWAY_DATABASE_HOST")
+```
+
+The lifecycle also exposes the loaded configuration files through `configs`, one entry per file:
+
+```kotlin
+val config = gradeway.configs.gradewayEntry.config   // config.toml
+val drivers = gradeway.configs.driversEntry.config   // drivers.toml
+val platform = gradeway.configs.platformEntry.config // platform.toml
+```
+
+<Callout type="info">
+  Upgrading from **0.2.x**? `databaseEnvironment` and `messagingEnvironment` were merged into a
+  single `environment`, `directory` is now a `Path` instead of a `File`, and `configs.config` was
+  split into `gradewayEntry`, `driversEntry` and `platformEntry`.
+</Callout>
+
+## Tracks
+
+Tracks are ordered ladders of roles. `gradeway.tracks` (`TrackService`) manages tracks and their
+stages, and every `PlayerEntity` can be promoted or demoted on a track directly:
+
+```kotlin
+val track = gradeway.tracks.createTrack("staff").getOrNull() ?: return
+
+listOf("helper", "moderator", "admin")
+    .mapNotNull { gradeway.roles.findByName(it) }
+    .forEach { role -> gradeway.tracks.addStage(track, role) }
+
+val player = gradeway.players.findByName("Notch") ?: return
+
+player.promote(track.id.value)
+    .onLeft { error ->
+        // EntityNotFound, TargetNotFound, NoStages, MaximumStageReached or Unexpected
+    }
+
+val currentStage = player.findCurrentStage(track.id.value) // the stage matching the primary role
+```
+
+A player's current stage is the stage whose role is the player's primary role. Promoting adds the
+next stage's role, makes it the primary role and removes the previous stage's role; demoting does
+the same in the other direction.
+
+## Default Roles
+
+The default role is assigned to players on join, depending on the `[defaultRole]` section in
+`config.toml`, see [Configuration](/gradeway/admin/configure#default-role).
+
+```kotlin
+gradeway.roles.setDefault("member")       // makes "member" the only default role
+gradeway.roles.setDefaultFlag("vip", true) // flags "vip" without touching other default roles
+gradeway.roles.clearDefault()             // unflags every default role
+
+val defaultRole = gradeway.roles.getDefaultRole() // highest weighted default role, or null
 ```

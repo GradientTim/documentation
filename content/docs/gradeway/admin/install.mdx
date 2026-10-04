@@ -25,8 +25,9 @@ You should stop the server/proxy and continue with the steps. **It is not recomm
 
 Choose a [database driver](/gradeway/admin/drivers) of your choice and place the **database driver .jar** file in the `plugins/gradeway/drivers` folder.
 
-Configure the Gradeway `config.toml` file to suit your needs and ensure that the drivers can connect successfully.
-[You can find more information here.](/gradeway/admin/configure)
+Set the driver's ID as `database.driver` in `drivers.toml`, and put the driver's connection settings
+(host, port, credentials, ...) into a `.env` file inside the `plugins/gradeway` folder so the driver
+can connect successfully. [You can find more information here.](/gradeway/admin/configure)
 
 <Callout type="idea">
   You can also install an external messaging driver directly and place it in this folder as well.
@@ -42,7 +43,7 @@ CREATE DATABASE gradeway;
 ```
 
 <Callout type="warn">
-  Gradeway will create **17 tables**. These have a prefix (`gradeway_`) by default, but if you care
+  Gradeway will create **19 tables**. These have a prefix (`gradeway_`) by default, but if you care
   about organization, use an external database instead of a single database for all your systems.
 </Callout>
 
@@ -51,11 +52,16 @@ CREATE DATABASE gradeway;
 Now start your server or proxy again and wait until Gradeway has finished loading. If no error message appears, you've done everything correctly.
 
 You may execute these commands in the console to grant yourself full access to Gradeway.
-_The command prefix may differ from your platform_
+_The command prefix may differ depending on your platform._
 
 <Callout>
   If you haven't entered the server or proxy yet, run this command first, otherwise Gradeway won't
   be able to find you in the system: `gradeway player create (UUID) (Name)`
+</Callout>
+
+<Callout type="warn">
+  On proxies the root command is `gradewayvelocity` (Velocity) or `gradewaybungeecord`
+  (BungeeCord), see [Commands](/gradeway/commands) for all aliases.
 </Callout>
 
 {/* shell has a great highlight */}
@@ -64,6 +70,11 @@ _The command prefix may differ from your platform_
 gradeway permission add "gradeway.*" REGEX
 gradeway player modify <name> permissions set "gradeway.*"
 ```
+
+<Callout type="idea">
+  Want every new player to receive a role automatically? Create one and make it the default role
+  with `gradeway role default set <role>`, see [Configuration](/gradeway/admin/configure#default-role).
+</Callout>
 
 ## Checklist
 

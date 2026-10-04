@@ -24,6 +24,8 @@ A permission system that is straightforward to use for everyone, whether you are
 - You need **time-based roles**, such as _trials_, _subscriptions_, or _VIP periods_ that expire on their own.
 - You want to **pause a role** without deleting it, e.g., suspend a donor perk during a rule violation, then restore it.
 - You want to bundle a set of permissions into a **template** and assign that to **players or roles at once**, instead of granting permissions one at a time.
+- You want to move players along a **track** of roles (e.g. _member_ → _vip_ → _mvp_) with a single promote or demote command.
+- You want new players to receive a **default role** automatically when they join for the first time.
 
 ## Questions and Answers
 
@@ -47,8 +49,10 @@ A permission system that is straightforward to use for everyone, whether you are
 
 **5. Which platforms are supported?**
 
-- Server: _Paper_, _Bukkit_,
+- Server: _Paper_, _Bukkit_
 - Proxy: _Velocity_, _BungeeCord_
+
+See [Compatibility](/gradeway/compatibility) for the full list of platforms and drivers.
 
 <Callout type="idea">
   The focus until **v1.0.0** is on **server/proxy plugins** to improve and focus Gradeway on one side.

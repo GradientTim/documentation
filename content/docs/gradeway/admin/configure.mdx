@@ -8,8 +8,8 @@ directory (`plugins/gradeway/`) the first time it loads:
 
 | File            | Purpose                                                                          |
 | --------------- | -------------------------------------------------------------------------------- |
-| `config.toml`   | General settings: message appearance, import limits and default role handling.   |
-| `drivers.toml`  | Which database and messaging [drivers](/gradeway/admin/drivers) to use.          |
+| `config.toml`   | General settings: message appearance, import limits, default roles and audit log. |
+| `drivers.toml`  | Which database, messaging and notification [drivers](/gradeway/admin/drivers) to use. |
 | `platform.toml` | Settings that only apply to the platform you're running (Paper, Velocity, ...).  |
 | `.env`          | Connection credentials and other variables read by the drivers (create it yourself). |
 
@@ -19,7 +19,7 @@ adds options, so you don't need to touch it yourself.
 ## config.toml
 
 ```toml title="config.toml"
-version = 2
+version = 3
 # Defines the prefix that is prepended to messages sent by Gradeway.
 # Supports MiniMessage formatting.
 prefix = "<gradient:#ed751f:#e89e1e>Gradeway</gradient> <dark_gray>›</dark_gray> "
@@ -44,6 +44,14 @@ maxImportSizeBytes = 2147483648
   # This also covers existing players, but re-applies the default role after
   # their primary role has been cleared.
   assignWhenNoPrimaryRole = false
+
+# Controls how changes are recorded in the audit log.
+[auditLog]
+  # Controls whether changes are recorded in the audit log.
+  enabled = true
+  # Controls whether each recorded audit log entry also sends a notification.
+  # Requires notifications to be enabled in drivers.toml.
+  notify = true
 ```
 
 ### Default role
@@ -61,10 +69,21 @@ primary role. Pick it with `/gradeway role default set <role>`, see
   with the highest weight is used, ties are broken by name.
 </Callout>
 
+### Audit log
+
+Every change made through a command or the API (creating, updating or deleting roles, groups,
+players, permissions, templates, tracks and their assignments) is written to the `audit_logs`
+table, together with who made it and the state before and after the change, see
+[Database](/gradeway/database#audit-log).
+
+- `enabled` turns recording on or off.
+- `notify` sends a [notification](/gradeway/admin/notifications) for every recorded entry. Nothing
+  is sent unless notifications are also enabled in `drivers.toml`.
+
 ## drivers.toml
 
 ```toml title="drivers.toml"
-version = 1
+version = 2
 
 [database]
   # Defines the database type that Gradeway should use.
@@ -81,7 +100,24 @@ version = 1
   # Defines the type of messaging service.
   # Use the 'id' of the installed messaging driver.
   driver = ""
+
+[notification]
+  # Controls whether notifications are sent to external services.
+  enabled = false
+  # Defines the notification services to send notifications to.
+  # Use the 'id' of each installed notification driver
+  # (built-in: "console", "discord", "ingame", "slack", "webhook").
+  # Every notification is sent to all listed drivers.
+  drivers = []
+  # Only send notifications for these target types (e.g. "role", "role_permission", "player_role").
+  # Leave empty to send notifications for every target type.
+  targets = []
+  # Only send notifications for these actions (e.g. "create", "update", "delete").
+  # Leave empty to send notifications for every action.
+  actions = []
 ```
+
+See [Notifications](/gradeway/admin/notifications) for the built-in drivers and all target types.
 
 ## platform.toml
 
@@ -91,23 +127,37 @@ The content of `platform.toml` depends on the platform Gradeway runs on.
 <Tab value="Paper / Bukkit">
 
 ```toml title="platform.toml"
-version = 1
+version = 2
 # When enabled, server operators will not have access to all permission protected commands.
 disableOp = true
+# When enabled, command blocks can no longer execute Gradeway commands.
+disableCommandBlocks = true
+# When enabled, remote console access (RCON) can no longer execute Gradeway commands
+disableRemoteConsole = true
+
+[notification]
+  # When enabled, notifications will persist across server restarts.
+  persistent = true
 ```
+
+- `disableCommandBlocks` blocks command blocks and command block minecarts from running Gradeway
+  commands.
+- `disableRemoteConsole` blocks RCON from running Gradeway commands.
+- `notification.persistent` stores each player's `/gradeway notify` setting on the player, so it
+  is kept across restarts. When disabled, the setting is only kept in memory.
 
 </Tab>
 <Tab value="Velocity">
 
 ```toml title="platform.toml"
-version = 1
+version = 2
 ```
 
 </Tab>
 <Tab value="BungeeCord">
 
 ```toml title="platform.toml"
-version = 1
+version = 2
 ```
 
 </Tab>
@@ -135,6 +185,13 @@ GRADEWAY_DATABASE_PASSWORD=change-me
 <Callout type="warn">
   The `.env` file contains credentials. Make sure only the user running the server or proxy can
   read it, and never commit it to a public repository.
+</Callout>
+
+<Callout type="info">
+  Upgrading from **0.3.x**? Gradeway updates `config.toml`, `drivers.toml` and `platform.toml` on
+  its own and adds the new options with their defaults. Note that on Paper and Bukkit, command
+  blocks and RCON can no longer run Gradeway commands unless you set `disableCommandBlocks` and
+  `disableRemoteConsole` to `false`.
 </Callout>
 
 <Callout type="info">

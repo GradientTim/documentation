@@ -1,0 +1,185 @@
+---
+title: Notifications
+description: Get notified about changes in Discord, Slack, in-game or on your own webhook.
+---
+
+Gradeway can send a notification every time something changes, for example when a role is created,
+a permission is assigned to a player or a track is deleted. Notifications are built from the
+[audit log](/gradeway/admin/configure#audit-log), so each one says **who** made the change
+(the actor), **what** was changed (the target), the **action** and the state before and after it.
+
+## Enabling notifications
+
+Notifications are configured in `drivers.toml`. List the IDs of the drivers you want to use, and
+every notification is sent to each of them:
+
+```toml title="drivers.toml"
+[notification]
+  enabled = true
+  drivers = ["ingame", "discord"]
+  targets = []
+  actions = []
+```
+
+Notifications also require `auditLog.enabled` and `auditLog.notify` to be `true` in `config.toml`,
+which is the default. Changes to these settings take effect after `/gradeway reload`.
+
+<Callout type="idea">
+  Notifications never slow down or block a change. They're sent in the background, and a service
+  that's down or misconfigured is only logged to the console.
+</Callout>
+
+### Filters
+
+`targets` and `actions` limit which changes send a notification. An empty list allows everything.
+
+`actions` accepts `create`, `update` and `delete`.
+
+`targets` accepts the following target types:
+
+| Entity              | Target types                                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Roles               | `role`, `role_parent`, `role_group`, `role_attribute`, `role_permission`, `role_permission_template`                |
+| Groups              | `group`, `group_permission`, `group_permission_template`                                                            |
+| Players             | `player`, `player_role`, `player_attribute`, `player_permission`, `player_permission_template`                      |
+| Permissions         | `permission`                                                                                                        |
+| Permission template | `permission_template`, `permission_template_permission`                                                            |
+| Tracks              | `track`, `track_stage`                                                                                              |
+
+For example, to only get notified when roles are added to or removed from players:
+
+```toml title="drivers.toml"
+[notification]
+  enabled = true
+  drivers = ["discord"]
+  targets = ["player_role"]
+  actions = ["create", "delete"]
+```
+
+## Built-in drivers
+
+The notification drivers below are part of Gradeway itself, there's nothing to download or put into
+the `drivers/` folder. The webhook URLs are read from environment variables, see
+[Environment variables](/gradeway/admin/configure#environment-variables).
+
+| ID        | Sends to                          | Environment Variables                                                                                    |
+| --------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `console` | The server or proxy console       | -                                                                                                        |
+| `ingame`  | Online players in chat            | -                                                                                                        |
+| `discord` | A Discord channel via webhook     | `GRADEWAY_NOTIFICATION_DISCORD_WEBHOOK_URL` (required)                                                   |
+| `slack`   | A Slack channel via webhook       | `GRADEWAY_NOTIFICATION_SLACK_WEBHOOK_URL` (required)                                                     |
+| `webhook` | Any HTTP endpoint as JSON         | `GRADEWAY_NOTIFICATION_WEBHOOK_URL` (required)<br/>`GRADEWAY_NOTIFICATION_WEBHOOK_SECRET` (optional)     |
+
+A driver whose required variable is missing is skipped with an error in the console, the other
+drivers keep working.
+
+<Callout type="info">
+  A notification is sent only by the server or proxy the change was made on. If several servers use
+  the same Discord webhook, each change still shows up there once.
+</Callout>
+
+### Console
+
+Writes a single line per change to the console, for example
+`[notification] player (<uuid>) update role (<uuid>)`. Useful to try out your `targets` and
+`actions` filters before connecting an external service.
+
+### In-game
+
+Sends a chat message to every online player who has the `gradeway.notify` permission **and** has
+turned notifications on with `/gradeway notify`, see [Commands](/gradeway/commands#notifications).
+Notifications are off for every player until they turn them on.
+
+Hovering over the message shows the actor, the target IDs, the time and the changed fields.
+Clicking it copies the target ID.
+
+On Paper and Bukkit, the `/gradeway notify` setting is saved on the player and kept across restarts,
+unless `notification.persistent` is set to `false` in [`platform.toml`](/gradeway/admin/configure#platformtoml).
+On Velocity and BungeeCord, it's only kept until the proxy restarts.
+
+### Discord
+
+Posts an embed to a [Discord webhook](https://support.discord.com/hc/en-us/articles/228383668)
+with the actor, target, action and the state before and after the change. The embed is green for
+`create`, yellow for `update` and red for `delete`.
+
+```dotenv title=".env"
+GRADEWAY_NOTIFICATION_DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+### Slack
+
+Posts a message to a [Slack incoming webhook](https://api.slack.com/messaging/webhooks) with the
+actor, target and the state before and after the change.
+
+```dotenv title=".env"
+GRADEWAY_NOTIFICATION_SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
+```
+
+### Webhook
+
+Sends every notification as a JSON `POST` request to your own endpoint, for example to forward
+changes into your own logging or moderation tools.
+
+```dotenv title=".env"
+GRADEWAY_NOTIFICATION_WEBHOOK_URL=https://example.com/gradeway
+GRADEWAY_NOTIFICATION_WEBHOOK_SECRET=change-me
+```
+
+```json title="Request body"
+{
+  "type": "audit",
+  "action": "update",
+  "timestamp": "2026-11-07T12:00:00Z",
+  "actor": {
+    "type": "player",
+    "identifier": "069a79f4-44e9-4726-a5be-fca90e38aaf5"
+  },
+  "target": {
+    "type": "role",
+    "id": "4f1c7a2e-9a1b-4a3c-8f6e-2b7d1c0e9a55",
+    "secondaryId": null
+  },
+  "before": {
+    "id": "4f1c7a2e-9a1b-4a3c-8f6e-2b7d1c0e9a55",
+    "name": "vip",
+    "weight": 10,
+    "isDefault": false,
+    "createdAt": 1793966400000,
+    "updatedAt": 1793966400000
+  },
+  "after": {
+    "id": "4f1c7a2e-9a1b-4a3c-8f6e-2b7d1c0e9a55",
+    "name": "vip",
+    "weight": 20,
+    "isDefault": false,
+    "createdAt": 1793966400000,
+    "updatedAt": 1794052800000
+  }
+}
+```
+
+`before` and `after` are snapshots of the target, timestamps are in epoch milliseconds. `before` is `null` for `create` and `after` is `null` for `delete`. For assignments, such as a role
+of a player, `id` and `secondaryId` hold both sides of the relation.
+
+`actor.type` is one of `player`, `console`, `command_block`, `command_minecart`, `rcon`, `entity`,
+`api` or `system`. `actor.identifier` depends on the type, for example the UUID of a player or the
+name of the plugin for `api`, and is `null` for `console` and `system`.
+
+Every request carries the following headers:
+
+| Header                 | Value                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `Content-Type`         | `application/json`                                                                     |
+| `X-Gradeway-Event`     | The notification type, currently always `audit`.                                       |
+| `X-Gradeway-Signature` | `sha256=<hex>`, the HMAC-SHA256 of the raw body using your secret. Only sent with a secret. |
+
+<Callout type="idea">
+  Set a secret and compare `X-Gradeway-Signature` against your own HMAC-SHA256 of the raw request
+  body to make sure a request really comes from your server.
+</Callout>
+
+## Custom drivers
+
+Other plugins can add their own notification drivers, for example to send notifications by email
+or to another chat service. See [Building a Driver](/gradeway/dev/drivers#notification-drivers).

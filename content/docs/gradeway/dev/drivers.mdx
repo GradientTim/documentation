@@ -1,10 +1,10 @@
 ---
 title: Drivers
-description: A guide on how to build custom database and messaging drivers for Gradeway.
+description: A guide on how to build custom database, messaging and notification drivers for Gradeway.
 ---
 
-A driver is a pluggable backend implementation for either a **database** or a **messaging**
-system. Drivers are compiled only against `core-api`, so Gradeway's core never has to depend on a
+A driver is a pluggable backend implementation for a **database**, a **messaging** system or a
+**notification** service. Drivers are compiled only against `core-api`, so Gradeway's core never has to depend on a
 JDBC driver, Jedis, or any other third-party client directly.
 
 If you're looking to install an already-built driver as a server administrator, see
@@ -12,7 +12,7 @@ If you're looking to install an already-built driver as a server administrator, 
 
 ## The Driver class
 
-Every driver extends the abstract `Driver` class and implements one of two adapter interfaces,
+Every driver extends the abstract `Driver` class and implements one of three adapter interfaces,
 depending on what kind of backend it provides.
 
 ```kotlin title="Driver.kt"
@@ -34,12 +34,16 @@ interface DatabaseAdapter {
 interface MessagingAdapter {
     fun createMessagingBroker(environment: Environment): MessagingBroker
 }
+
+interface NotificationAdapter {
+    fun createNotificationNotifier(environment: Environment): NotificationNotifier
+}
 ```
 
 The class is also annotated with `@CreateDriver`, giving it a stable `id` and a `DriverType`:
 
 ```kotlin
-@CreateDriver(id = "my-driver", type = DriverType.DATABASE) // or DriverType.MESSAGING
+@CreateDriver(id = "my-driver", type = DriverType.DATABASE) // or MESSAGING / NOTIFICATION
 class MyDriver : Driver(), DatabaseAdapter {
     override fun createDataSource(environment: Environment): DataSource {
         TODO()
@@ -80,6 +84,39 @@ gradeway.drivers.registerDriver(
     driver = PluginMessageDriver(this),
 )
 ```
+
+## Notification drivers
+
+A notification driver implements `NotificationAdapter` and returns a `NotificationNotifier`, which is
+called for every notification that passes the `targets`/`actions` filters in `drivers.toml`. Admins
+enable it by adding its `id` to `notification.drivers`, see
+[Notifications](/gradeway/admin/notifications).
+
+```kotlin title="EmailNotificationDriver.kt"
+@CreateDriver(id = "email", type = DriverType.NOTIFICATION)
+class EmailNotificationDriver : Driver(), NotificationAdapter {
+    override fun createNotificationNotifier(environment: Environment): NotificationNotifier {
+        val recipient = environment.stringRequired("GRADEWAY_NOTIFICATION_EMAIL_TO")
+        return EmailNotificationNotifier(recipient)
+    }
+}
+
+class EmailNotificationNotifier(private val recipient: String) : NotificationNotifier {
+    override fun notify(notification: Notification) {
+        if (notification !is AuditNotification) return
+        // notification.summary, e.g. "player (<uuid>) update role (<uuid>)"
+        // notification.changes, the fields that changed
+        // notification.toJson(), the same JSON the webhook driver sends
+    }
+}
+```
+
+`notify` is called on the thread that made the change, so send anything slow (network requests,
+emails) asynchronously. Exceptions thrown by a notifier are logged and don't affect the change or
+the other notifiers.
+
+`AuditNotification` carries the `actor`, `action`, `target`, the `before`/`after` snapshots and the
+`timestamp` of the change, plus `title`, `summary` and `changes` helpers for building messages.
 
 ## Building a driver module
 

@@ -27,6 +27,9 @@ icon: Puzzle
 | PostgreSQL | Messaging | `driver-messaging-postgres` |
 | Redis      | Messaging | `driver-messaging-redis`    |
 
+The `console`, `ingame`, `discord`, `slack` and `webhook` notification drivers are built into
+Gradeway and don't need a separate jar, see [Notifications](/gradeway/admin/notifications).
+
 Every backend builds into its own driver jar. Drop the ones you need into the `drivers/` folder next
 to the plugin - only the client libraries for the drivers you actually use get loaded. See
 [Drivers](/gradeway/admin/drivers) for their IDs and environment variables.

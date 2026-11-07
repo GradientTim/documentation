@@ -1,10 +1,11 @@
 ---
 title: Drivers
-description: A list of official and community database and messaging drivers for Gradeway.
+description: A list of official and community database, messaging and notification drivers for Gradeway.
 ---
 
 Gradeway needs a **database driver** to store its data, and optionally a **messaging driver** to
-sync data in real time across servers, see [Messaging](/gradeway/admin/messaging). Drop the
+sync data in real time across servers, see [Messaging](/gradeway/admin/messaging), and optionally
+one or more **notification drivers**, see [Notifications](/gradeway/admin/notifications). Drop the
 driver's `.jar` into the `drivers/` folder and set its `id` as `database.driver` or
 `messaging.driver` in `drivers.toml`, see [Configuration](/gradeway/admin/configure).
 
@@ -47,6 +48,19 @@ and are attached to every [release](https://github.com/GradientTim/gradeway/rele
 | `postgres` | [PostgreSQL](https://github.com/GradientTim/gradeway/tree/main/driver-messaging-postgres) | `GRADEWAY_MESSAGING_NAME` / `GRADEWAY_POSTGRES_NAME` (optional, default: `gradeway`)<br/>`GRADEWAY_MESSAGING_HOST` / `GRADEWAY_POSTGRES_HOST` (optional, default: `localhost`)<br/>`GRADEWAY_MESSAGING_PORT` / `GRADEWAY_POSTGRES_PORT` (optional, default: `5432`)<br/>`GRADEWAY_MESSAGING_USER` / `GRADEWAY_POSTGRES_USER` (optional)<br/>`GRADEWAY_MESSAGING_PASSWORD` / `GRADEWAY_POSTGRES_PASSWORD` (optional) |
 | `redis`    | [Redis](https://github.com/GradientTim/gradeway/tree/main/driver-messaging-redis)         | `GRADEWAY_MESSAGING_HOST` / `GRADEWAY_REDIS_HOST` (optional, default: `localhost`)<br/>`GRADEWAY_MESSAGING_PORT` / `GRADEWAY_REDIS_PORT` (optional, default: `6379`)<br/>`GRADEWAY_MESSAGING_USER` / `GRADEWAY_REDIS_USER` (optional)<br/>`GRADEWAY_MESSAGING_PASSWORD` / `GRADEWAY_REDIS_PASSWORD` (optional)<br/>`GRADEWAY_REDIS_DATABASE` (optional, default: `0`)                                               |
 
+### Notification
+
+The notification drivers are built into Gradeway and need no extra `.jar`. List their IDs in
+`notification.drivers` in `drivers.toml`.
+
+| ID        | Name                                                       | Environment Variables                                                                                |
+| --------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `console` | [Console](/gradeway/admin/notifications#console)           | -                                                                                                    |
+| `ingame`  | [In-game](/gradeway/admin/notifications#in-game)           | -                                                                                                    |
+| `discord` | [Discord](/gradeway/admin/notifications#discord)           | `GRADEWAY_NOTIFICATION_DISCORD_WEBHOOK_URL` (required)                                               |
+| `slack`   | [Slack](/gradeway/admin/notifications#slack)               | `GRADEWAY_NOTIFICATION_SLACK_WEBHOOK_URL` (required)                                                 |
+| `webhook` | [Webhook](/gradeway/admin/notifications#webhook)           | `GRADEWAY_NOTIFICATION_WEBHOOK_URL` (required)<br/>`GRADEWAY_NOTIFICATION_WEBHOOK_SECRET` (optional) |
+
 ## Community Drivers
 
 Drivers built and maintained outside the Gradeway repository. They aren't reviewed or supported
@@ -66,6 +80,11 @@ by the Gradeway maintainers, install them at your own risk.
 | --- | ---- | --------------------- |
 
 ### Messaging
+
+| ID  | Name | Environment Variables |
+| --- | ---- | --------------------- |
+
+### Notification
 
 | ID  | Name | Environment Variables |
 | --- | ---- | --------------------- |

@@ -1,6 +1,6 @@
 {
   "title": "Development",
   "icon": "Code",
-  "pages": ["install", "usage", "drivers", "strategies", "attributes"],
+  "pages": ["install", "usage", "events", "drivers", "strategies", "attributes"],
   "defaultOpen": true
 }

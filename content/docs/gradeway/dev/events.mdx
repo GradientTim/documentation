@@ -1,0 +1,193 @@
+---
+title: Events
+description: Listen to changes in Gradeway and cancel them before they happen.
+---
+
+Gradeway has its own event system that works the same way on every platform. Most changes fire two
+events:
+
+- A **pre-event** (e.g. `RoleCreateEvent`) before the change. It can be canceled, and some
+  pre-events let you modify the change, for example the `spec` of a create event.
+- A **post-event** (e.g. `RoleCreatedEvent`) after the change was saved. It can't be canceled and is
+  also fired on the other servers of your network.
+
+## Subscribing
+
+Listeners are subscribed through `events` on the lifecycle. The first argument is the owner of the
+subscription, usually your plugin instance:
+
+```kotlin
+import dev.gradienttim.gradeway.Gradeway
+import dev.gradienttim.gradeway.GradewayLifecycle
+import dev.gradienttim.gradeway.event.EventPriority
+import dev.gradienttim.gradeway.events.role.RoleCreatedEvent
+import dev.gradienttim.gradeway.managers.subscribe
+
+val gradeway = Gradeway.getOrThrow() as GradewayLifecycle<*>
+
+val subscription = gradeway.events.subscribe<RoleCreatedEvent>(plugin) { event ->
+    plugin.logger.info("Role ${event.name} was created by ${event.actor.type}")
+}
+
+subscription.unsubscribe()           // removes this listener
+gradeway.events.unsubscribeAll(plugin) // removes every listener of the owner
+```
+
+A listener receives every event that's an instance of its type, so subscribing to `PostEvent`
+receives all post-events, and subscribing to `Event<*>` receives every event.
+
+<Callout type="idea">
+  On Paper and Bukkit, the listeners of a plugin are removed automatically when that plugin is
+  disabled. On Velocity and BungeeCord, call `unsubscribeAll` yourself when your plugin shuts down.
+</Callout>
+
+### Priorities
+
+Listeners run in the order of their `EventPriority`: `LOWEST`, `LOW`, `NORMAL` (default), `HIGH`,
+`HIGHEST` and `MONITOR`. Later listeners have the final say over the result of an event. `MONITOR`
+listeners run last and should only observe the event, never change it.
+
+```kotlin
+gradeway.events.subscribe<RoleCreatedEvent>(plugin, EventPriority.MONITOR) { event -> }
+```
+
+An exception thrown by a listener is logged and doesn't affect the other listeners.
+
+### Threads
+
+Pre-events are fired on the thread that started the change, so keep their listeners fast. Post-events
+are fired on the platform's scheduler once the change is complete.
+
+## Canceling operations
+
+Set the `result` of a pre-event to `Event.CancelledResult.Cancel` to stop the change:
+
+```kotlin
+import dev.gradienttim.gradeway.event.Event
+import dev.gradienttim.gradeway.events.role.RoleDeleteEvent
+
+gradeway.events.subscribe<RoleDeleteEvent>(plugin) { event ->
+    if (event.role.name == "admin") {
+        event.result = Event.CancelledResult.Cancel
+    }
+}
+```
+
+The operation then returns its `Cancelled` error (e.g. `RoleService.DeleteRoleError.Cancelled`)
+instead of making the change. Every `Cancelled` error implements `EventCancelledError`, so you can
+check for a cancellation without knowing the exact error type. Commands reply with _"This action was
+canceled by another plugin."_.
+
+Some pre-events also let you change the operation. For example, the `spec` of `RoleCreateEvent` can
+be modified before the role is created:
+
+```kotlin
+gradeway.events.subscribe<RoleCreateEvent>(plugin) { event ->
+    event.spec.weight = maxOf(event.spec.weight, 0)
+}
+```
+
+## Events across servers
+
+Every post-event is relayed to the other servers through the [messaging broker](/gradeway/admin/messaging)
+and fired there again. Check `origin` to tell where the change was made:
+
+```kotlin
+import dev.gradienttim.gradeway.event.EventOrigin
+
+gradeway.events.subscribe<RoleCreatedEvent>(plugin) { event ->
+    when (val origin = event.origin) {
+        EventOrigin.Local -> { /* the change was made on this server */ }
+        is EventOrigin.Remote -> { /* the change was made on origin.serverId */ }
+    }
+}
+```
+
+Without messaging, post-events are only fired on the server the change was made on. Pre-events are
+never relayed.
+
+<Callout type="info">
+  Since relayed post-events are serialized, they carry IDs and values (e.g. `roleId`) instead of
+  entities. Look the entity up through the API when you need more than that.
+</Callout>
+
+## Available events
+
+Every pre-event has an `actor` property with the [actor](/gradeway/dev/usage#actors) that started
+the change, and so does every post-event except the lifecycle events. Events that apply to roles,
+groups and players alike carry a `subject` (`EventSubject.Role`, `EventSubject.Group` or
+`EventSubject.Player`) with the entity's ID.
+
+| Package       | Pre-event                         | Post-event                         |
+| ------------- | --------------------------------- | ---------------------------------- |
+| `role`        | `RoleCreateEvent`                 | `RoleCreatedEvent`                 |
+|               | `RoleDeleteEvent`                 | `RoleDeletedEvent`                 |
+|               | `RoleRenameEvent`                 | `RoleRenamedEvent`                 |
+|               | `RoleWeightChangeEvent`           | `RoleWeightChangedEvent`           |
+|               | `RoleDefaultChangeEvent`          | `RoleDefaultChangedEvent`          |
+|               | `RoleParentAddEvent`              | `RoleParentAddedEvent`             |
+|               | `RoleParentRemoveEvent`           | `RoleParentRemovedEvent`           |
+| `group`       | `GroupCreateEvent`                | `GroupCreatedEvent`                |
+|               | `GroupDeleteEvent`                | `GroupDeletedEvent`                |
+|               | `GroupRenameEvent`                | `GroupRenamedEvent`                |
+|               | `GroupDefaultWeightChangeEvent`   | `GroupDefaultWeightChangedEvent`   |
+|               | `GroupRoleAddEvent`               | `GroupRoleAddedEvent`              |
+|               | `GroupRoleRemoveEvent`            | `GroupRoleRemovedEvent`            |
+| `player`      | `PlayerCreateEvent`               | `PlayerCreatedEvent`               |
+|               | `PlayerDeleteEvent`               | `PlayerDeletedEvent`               |
+|               | `PlayerRenameEvent`               | `PlayerRenamedEvent`               |
+|               | `PlayerWeightChangeEvent`         | `PlayerWeightChangedEvent`         |
+|               | `PlayerPrimaryRoleChangeEvent`    | `PlayerPrimaryRoleChangedEvent`    |
+|               | `PlayerRoleAddEvent`              | `PlayerRoleAddedEvent`             |
+|               | `PlayerRoleRemoveEvent`           | `PlayerRoleRemovedEvent`           |
+|               | `PlayerRoleExpiryChangeEvent`     | `PlayerRoleExpiryChangedEvent`     |
+|               | `PlayerRolePauseEvent`            | `PlayerRolePausedEvent`            |
+|               | `PlayerRoleResumeEvent`           | `PlayerRoleResumedEvent`           |
+|               | -                                 | `PlayerRoleExpiredEvent`           |
+| `track`       | `TrackCreateEvent`                | `TrackCreatedEvent`                |
+|               | `TrackDeleteEvent`                | `TrackDeletedEvent`                |
+|               | `TrackSlugChangeEvent`            | `TrackSlugChangedEvent`            |
+|               | `TrackStageAddEvent`              | `TrackStageAddedEvent`             |
+|               | `TrackStageRemoveEvent`           | `TrackStageRemovedEvent`           |
+|               | `TrackStageMoveEvent`             | `TrackStageMovedEvent`             |
+|               | `PlayerPromoteEvent`              | `PlayerPromotedEvent`              |
+|               | `PlayerDemoteEvent`               | `PlayerDemotedEvent`               |
+| `permission`  | `PermissionNodeCreateEvent`       | `PermissionNodeCreatedEvent`       |
+|               | `PermissionNodeDeleteEvent`       | `PermissionNodeDeletedEvent`       |
+|               | `PermissionNodeValueChangeEvent`  | `PermissionNodeValueChangedEvent`  |
+|               | `PermissionNodeTypeChangeEvent`   | `PermissionNodeTypeChangedEvent`   |
+|               | `PermissionsAssignEvent`          | `PermissionsAssignedEvent`         |
+|               | `PermissionsUnassignEvent`        | `PermissionsUnassignedEvent`       |
+|               | `PermissionsClearEvent`           | `PermissionsClearedEvent`          |
+| `template`    | `TemplateCreateEvent`             | `TemplateCreatedEvent`             |
+|               | `TemplateDeleteEvent`             | `TemplateDeletedEvent`             |
+|               | `TemplateRenameEvent`             | `TemplateRenamedEvent`             |
+|               | `TemplateAssignedToChangeEvent`   | `TemplateAssignedToChangedEvent`   |
+|               | `TemplatePermissionAddEvent`      | `TemplatePermissionAddedEvent`     |
+|               | `TemplatePermissionRemoveEvent`   | `TemplatePermissionRemovedEvent`   |
+|               | `TemplatePermissionsClearEvent`   | `TemplatePermissionsClearedEvent`  |
+|               | `TemplateLinkEvent`               | `TemplateLinkedEvent`              |
+|               | `TemplateUnlinkEvent`             | `TemplateUnlinkedEvent`            |
+|               | `TemplateApplyEvent`              | `TemplateAppliedEvent`             |
+|               | `TemplateRevokeEvent`             | `TemplateRevokedEvent`             |
+| `attribute`   | `AttributeAddEvent`               | `AttributeAddedEvent`              |
+|               | `AttributeUpdateEvent`            | `AttributeUpdatedEvent`            |
+|               | `AttributeRemoveEvent`            | `AttributeRemovedEvent`            |
+|               | `AttributesClearEvent`            | `AttributesClearedEvent`           |
+
+All events live in `dev.gradienttim.gradeway.events.<package>`.
+
+### Lifecycle events
+
+The events in `dev.gradienttim.gradeway.events.lifecycle` are fired on the local server only and
+can't be canceled:
+
+| Event                     | Fired when                                     |
+| ------------------------- | ---------------------------------------------- |
+| `GradewayLoadedEvent`     | Gradeway finished loading.                     |
+| `GradewayEnabledEvent`    | Gradeway was enabled and connected to its database. |
+| `GradewayDisabledEvent`   | Gradeway was disabled.                         |
+| `GradewayReloadedEvent`   | The configuration was reloaded.                |
+| `BackupExportedEvent`     | A backup was exported.                         |
+| `BackupImportedEvent`     | A backup was imported.                         |
+| `MigrationCompletedEvent` | A migration finished.                          |

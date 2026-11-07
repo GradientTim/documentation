@@ -66,23 +66,60 @@ val platform = gradeway.configs.platformEntry.config // platform.toml
   split into `gradewayEntry`, `driversEntry` and `platformEntry`.
 </Callout>
 
+## Actors
+
+Every method that changes data takes an `Actor` as its first argument. The actor says who made the
+change and is written to the [audit log](/gradeway/database#audit-log), passed to
+[events](/gradeway/dev/events) and shown in [notifications](/gradeway/admin/notifications).
+
+```kotlin
+import dev.gradienttim.gradeway.audit.Actor
+
+val actor = Actor.Api("MyPlugin")         // changes made by your plugin
+// val actor = Actor.Player(player.uniqueId) // changes made on behalf of a player
+// val actor = Actor.Console               // changes made from the console
+```
+
+Use `Actor.Api` with your plugin's name for changes your plugin makes on its own, and
+`Actor.Player` when it acts on behalf of a player, for example from your own command or menu.
+
+<Callout type="info">
+  Upgrading from **0.3.x**? Every method that creates, updates or deletes data now requires an
+  `Actor` as its first parameter, e.g. `gradeway.roles.create(actor, "vip")` instead of
+  `gradeway.roles.create("vip")`. Methods that only read data are unchanged.
+</Callout>
+
+Creating an entity accepts an optional builder to set more values at once:
+
+```kotlin
+gradeway.roles.create(actor, "vip") {
+    weight = 20
+    isDefault = false
+}
+```
+
+Operations return an `Either`. Besides their usual errors, most of them can fail with a
+`Cancelled` error when a plugin canceled the operation through an
+[event](/gradeway/dev/events#canceling-operations).
+
 ## Tracks
 
 Tracks are ordered ladders of roles. `gradeway.tracks` (`TrackService`) manages tracks and their
 stages, and every `PlayerEntity` can be promoted or demoted on a track directly:
 
 ```kotlin
-val track = gradeway.tracks.createTrack("staff").getOrNull() ?: return
+val actor = Actor.Api("MyPlugin")
+val track = gradeway.tracks.createTrack(actor, "staff").getOrNull() ?: return
 
 listOf("helper", "moderator", "admin")
     .mapNotNull { gradeway.roles.findByName(it) }
-    .forEach { role -> gradeway.tracks.addStage(track, role) }
+    .forEach { role -> gradeway.tracks.addStage(actor, track, role) }
 
 val player = gradeway.players.findByName("Notch") ?: return
 
-player.promote(track.id.value)
+player.promote(actor, track.id.value)
     .onLeft { error ->
-        // EntityNotFound, TargetNotFound, NoStages, MaximumStageReached or Unexpected
+        // Cancelled, EntityNotFound, TargetNotFound, NoStages, MaximumStageReached or Unexpected
     }
 
 val currentStage = player.findCurrentStage(track.id.value) // the stage matching the primary role
@@ -98,9 +135,58 @@ The default role is assigned to players on join, depending on the `[defaultRole]
 `config.toml`, see [Configuration](/gradeway/admin/configure#default-role).
 
 ```kotlin
-gradeway.roles.setDefault("member")       // makes "member" the only default role
-gradeway.roles.setDefaultFlag("vip", true) // flags "vip" without touching other default roles
-gradeway.roles.clearDefault()             // unflags every default role
+gradeway.roles.setDefault(actor, "member")       // makes "member" the only default role
+gradeway.roles.setDefaultFlag(actor, "vip", true) // flags "vip" without touching other default roles
+gradeway.roles.clearDefault(actor)               // unflags every default role
 
 val defaultRole = gradeway.roles.getDefaultRole() // highest weighted default role, or null
+```
+
+## Pausing Roles
+
+A paused role stays assigned to the player, but grants no permissions and doesn't expire until it's
+resumed. Resuming extends any remaining expiry time by the time the role was paused.
+
+```kotlin
+val player = gradeway.players.findByName("Notch") ?: return
+val role = gradeway.roles.findByName("vip") ?: return
+
+gradeway.players.pauseRole(actor, player, role)
+gradeway.players.resumeRole(actor, player, role)
+```
+
+## Permission Inspection
+
+`gradeway.permissions` can explain where a permission comes from, the same way the
+[`why` and `whocan` commands](/gradeway/commands#inspection) do:
+
+```kotlin
+val player = gradeway.players.findByName("Notch") ?: return
+
+// every path through which the player has the permission, empty if they don't have it
+gradeway.permissions.explainPlayerPermission(player, "essentials.home").forEach { grant ->
+    val path = grant.path.joinToString(" -> ") { it.name } // e.g. Notch -> vip -> member
+}
+
+// every role and player that has the permission, directly or inherited
+val holders = gradeway.permissions.findPermissionHolders("essentials.home")
+holders.roles.forEach { role -> println("${role.name} (direct: ${role.direct})") }
+holders.players.forEach { player -> println("${player.name} (direct: ${player.direct})") }
+```
+
+Each path is made of `GrantSource.Player`, `GrantSource.Role`, `GrantSource.Group` and
+`GrantSource.Template` entries, and `grant.permission` is the matching permission node.
+
+## Notifications
+
+`notifications` on the lifecycle sends notifications to the configured
+[notification drivers](/gradeway/admin/notifications) and manages the in-game notification setting
+of players:
+
+```kotlin
+val gradeway = Gradeway.getOrThrow() as GradewayLifecycle<*>
+
+gradeway.notifications.isReceiving(player.uniqueId)
+gradeway.notifications.setReceiving(player.uniqueId, true)
+gradeway.notifications.toggleReceiving(player.uniqueId)
 ```

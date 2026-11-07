@@ -4,7 +4,7 @@ description: The database schema Gradeway creates.
 icon: Database
 ---
 
-Gradeway creates **19 tables** on first start. Every table name is prefixed with the configured
+Gradeway creates **20 tables** on first start. Every table name is prefixed with the configured
 `database.prefix` from `drivers.toml` (`gradeway_` by default), see
 [Configuration](/gradeway/admin/configure#driverstoml). Since the schema is relational, third-party
 plugins can query it directly instead of going through the API.
@@ -20,6 +20,18 @@ plugins can query it directly instead of going through the API.
 ```mermaid
 classDiagram
 direction BT
+class gradeway_audit_logs {
+   varchar(32) actor_type
+   varchar(255) actor_identifier
+   varchar(32) target_type
+   uuid target_id
+   uuid target_secondary_id
+   timestamp timestamp
+   varchar(64) action
+   text before
+   text after
+   uuid id
+}
 class gradeway_group_permission_templates {
    uuid group_id
    uuid permission_template_id
@@ -159,3 +171,24 @@ gradeway_role_permissions  -->  gradeway_roles : role_id.id
 gradeway_track_stages  -->  gradeway_roles : role_id.id
 gradeway_track_stages  -->  gradeway_tracks : track_id.id
 ```
+
+## Audit log
+
+`gradeway_audit_logs` records every change made through a command or the API, as long as
+`auditLog.enabled` is `true` in `config.toml`, see [Configuration](/gradeway/admin/configure#audit-log).
+It has no foreign keys, so entries stay in place after the entity they describe is deleted.
+
+| Column                | Description                                                                                                 |
+| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `actor_type`          | Who made the change: `player`, `console`, `command_block`, `command_minecart`, `rcon`, `entity`, `api` or `system`. |
+| `actor_identifier`    | Identifies the actor, e.g. the player's UUID or the plugin name for `api`. `null` for `console` and `system`. |
+| `target_type`         | What was changed, e.g. `role` or `player_role`, see [Notifications](/gradeway/admin/notifications#filters). |
+| `target_id`           | The ID of the changed entity. For an assignment, the ID of the first side (e.g. the player).               |
+| `target_secondary_id` | For an assignment, the ID of the second side (e.g. the role), otherwise `null`.                             |
+| `timestamp`           | When the change was recorded.                                                                               |
+| `action`              | `create`, `update` or `delete`.                                                                             |
+| `before` / `after`    | JSON snapshots of the target before and after the change. `before` is `null` on create, `after` on delete. |
+
+<Callout type="info">
+  The audit log is not part of [backups](/gradeway/admin/backup).
+</Callout>

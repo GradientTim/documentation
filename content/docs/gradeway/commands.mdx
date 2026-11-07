@@ -61,11 +61,51 @@ individual sub-command. For example, `/gradeway role create` requires both `grad
 | `/gradeway confirm <jobId>` | `gradeway.confirmJob` | Confirms a pending job.                                     |
 | `/gradeway cancel <jobId>`  | `gradeway.cancelJob`  | Cancels a pending job.                                      |
 
+<Callout type="info">
+  Plugins can cancel most operations through [events](/gradeway/dev/events). When that happens, the
+  command replies with _"This action was canceled by another plugin."_ and nothing is changed.
+</Callout>
+
+<Callout type="info">
+  On Paper and Bukkit, command blocks and the remote console (RCON) can't run Gradeway commands by
+  default. Turn them back on with `disableCommandBlocks` and `disableRemoteConsole` in
+  [`platform.toml`](/gradeway/admin/configure#platformtoml).
+</Callout>
+
 ## Lists
 
 Every `list` command below accepts the optional arguments `[page=1] [limit=10]`. The lists of
 roles, groups and players additionally accept a sort order after the limit,
 `[page=1] [limit=10] [order=desc]`, where `order` is `asc` or `desc` and sorts by weight.
+
+## Inspection
+
+The inspection commands show where a permission comes from. Permission arguments suggest the
+permissions the server knows about, such as permissions declared by plugins and permissions that
+were already checked at runtime.
+
+| Command                                  | Permission        | Description                                                                         |
+| ---------------------------------------- | ----------------- | ----------------------------------------------------------------------------------- |
+| `/gradeway why <player> <permission>`    | `gradeway.why`    | Shows every path through which a player has a permission.                           |
+| `/gradeway whocan <permission> [page=1]` | `gradeway.whocan` | Lists every role and player that has a permission, either directly or by inheritance. |
+
+`why` prints one line per path, for example `Steve → vip → member → template basic → essentials.home`.
+A path can go through the player's roles, their parent roles, groups and permission templates.
+Hover over a node to see its ID, and click it to copy the ID.
+
+`whocan` lists roles and players separately. Inherited holders are shown in gray, and hovering over
+a name shows whether it holds the permission directly or through inheritance. Players are shown 50
+per page. Clicking a player runs `/gradeway why` for that player and permission.
+
+## Notifications
+
+| Command                     | Permission        | Description                                                         |
+| --------------------------- | ----------------- | ------------------------------------------------------------------- |
+| `/gradeway notify`          | `gradeway.notify` | Toggles in-game notifications for yourself.                         |
+| `/gradeway notify <on/off>` | `gradeway.notify` | Turns in-game notifications for yourself on or off.                 |
+
+Only players can use this command. In-game notifications are off until a player turns them on, and
+they require the `ingame` notification driver, see [Notifications](/gradeway/admin/notifications).
 
 ## Cache
 
@@ -300,6 +340,8 @@ role assignment commands:
 | ------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------- |
 | `/gradeway player modify <idOrName> roles add <role> [until]` | `gradeway.player.roles.add`          | Adds a role to the player, optionally expiring at a given time. |
 | `/gradeway player modify <idOrName> roles remove <role>`      | `gradeway.player.roles.remove`       | Removes a role from the player.                                 |
+| `/gradeway player modify <idOrName> roles pause <role>`       | `gradeway.player.roles.pause`        | Pauses a role of the player without removing it.                |
+| `/gradeway player modify <idOrName> roles resume <role>`      | `gradeway.player.roles.resume`       | Resumes a paused role of the player.                            |
 | `/gradeway player modify <idOrName> roles setPrimary <role>`  | `gradeway.player.roles.setPrimary`   | Sets the player's primary role.                                 |
 | `/gradeway player modify <idOrName> roles clearPrimary`       | `gradeway.player.roles.clearPrimary` | Clears the player's primary role.                               |
 
@@ -308,3 +350,10 @@ role assignment commands:
   (minutes) and `s` (seconds), which can be combined, e.g. `1D12h` or `"1D 12h"` expires the role in
   1 day and 12 hours. Quote the value if it contains a space. Omit it to add the role permanently.
 </Callout>
+
+### Pausing roles
+
+A paused role stays assigned to the player but grants nothing until it's resumed: its permissions
+and weight are ignored, and it doesn't expire. When the role is resumed, its expiry time
+(if it has one) is extended by the time it was paused, so the player doesn't lose any of the
+remaining duration. `/gradeway player info` marks paused roles.

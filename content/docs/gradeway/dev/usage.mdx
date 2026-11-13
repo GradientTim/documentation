@@ -190,3 +190,24 @@ gradeway.notifications.isReceiving(player.uniqueId)
 gradeway.notifications.setReceiving(player.uniqueId, true)
 gradeway.notifications.toggleReceiving(player.uniqueId)
 ```
+
+## Updates
+
+`updates` on the lifecycle exposes the [update checker](/gradeway/admin/configure#update-checker):
+
+```kotlin
+val gradeway = Gradeway.getOrThrow() as GradewayLifecycle<*>
+
+val current = gradeway.updates.currentVersion       // SemVer of the running instance
+val latest = gradeway.updates.latestRelease?.version // null until a check has succeeded
+if (gradeway.updates.isUpdateAvailable) {
+    gradeway.logger.info("Update available: $current -> $latest")
+}
+
+gradeway.updates.check().thenAccept { result ->
+    result.onRight { release -> println("Latest release: ${release.version}") }
+}
+```
+
+`check()` runs asynchronously and returns a `CompletableFuture<Either<Throwable, Release>>`. It
+works even when the periodic checks are disabled in `config.toml`.

@@ -8,7 +8,7 @@ directory (`plugins/gradeway/`) the first time it loads:
 
 | File            | Purpose                                                                          |
 | --------------- | -------------------------------------------------------------------------------- |
-| `config.toml`   | General settings: message appearance, import limits, default roles and audit log. |
+| `config.toml`   | General settings: message appearance, default locale, import limits, default roles, audit log and update checker. |
 | `drivers.toml`  | Which database, messaging and notification [drivers](/gradeway/admin/drivers) to use. |
 | `platform.toml` | Settings that only apply to the platform you're running (Paper, Velocity, ...).  |
 | `.env`          | Connection credentials and other variables read by the drivers (create it yourself). |
@@ -19,7 +19,7 @@ adds options, so you don't need to touch it yourself.
 ## config.toml
 
 ```toml title="config.toml"
-version = 3
+version = 5
 # Defines the prefix that is prepended to messages sent by Gradeway.
 # Supports MiniMessage formatting.
 prefix = "<gradient:#ed751f:#e89e1e>Gradeway</gradient> <dark_gray>›</dark_gray> "
@@ -29,6 +29,9 @@ primaryColor = "#ed751f"
 # Defines the secondary color used throughout Gradeway messages.
 # Must be a hex color code.
 secondaryColor = "#e89e1e"
+# Defines the default locale used throughout Gradeway messages.
+# Must be a valid locale string.
+defaultLocale = "en"
 # Defines the maximum decompressed size, in bytes, allowed when importing a backup or migration file.
 # Protects against decompression-bomb archives that expand to consume excessive memory once decompressed.
 # Increase this if your server has a very large dataset and legitimate imports are being rejected.
@@ -52,7 +55,29 @@ maxImportSizeBytes = 2147483648
   # Controls whether each recorded audit log entry also sends a notification.
   # Requires notifications to be enabled in drivers.toml.
   notify = true
+
+# Controls checking GitHub for new Gradeway releases.
+[updateChecker]
+  # Controls whether Gradeway checks for new releases and logs them to the console.
+  enabled = true
+  # Defines how often, in hours, Gradeway checks for new releases.
+  # Values below 1 are treated as 1.
+  intervalHours = 6
+  # Notifies players with the 'gradeway.update.notify' permission or op about new releases when they join.
+  # Only applies to servers (Bukkit, Paper), not proxies.
+  notifyOnJoin = true
 ```
+
+### Default locale
+
+Gradeway's messages are loaded from the `.properties` files in `plugins/gradeway/languages/`, one
+file per locale (for example `en.properties`). Each player sees messages in their client's
+language if a matching file exists. Otherwise, and for the console, Gradeway falls back to
+`defaultLocale`.
+
+- Set it to the name of a language file without `.properties`, for example `"de"` for
+  `de.properties`.
+- Leaving it empty (`""`) falls back to English (`"en"`).
 
 ### Default role
 
@@ -79,6 +104,24 @@ table, together with who made it and the state before and after the change, see
 - `enabled` turns recording on or off.
 - `notify` sends a [notification](/gradeway/admin/notifications) for every recorded entry. Nothing
   is sent unless notifications are also enabled in `drivers.toml`.
+
+### Update checker
+
+Gradeway checks the latest [GitHub release](https://github.com/GradientTim/gradeway/releases)
+right after it starts and then every `intervalHours`. Pre-releases and drafts are ignored. When
+a newer version is found, it's logged to the console once, with links to GitHub, Modrinth and
+Hangar. A failed check only logs a warning and doesn't affect anything else.
+
+- `enabled` turns the update checker on or off.
+- `intervalHours` sets how often to check. Values below `1` are treated as `1`.
+- `notifyOnJoin` also tells players about the new version shortly after they join. Only
+  operators and players with the `gradeway.update.notify` permission get the message. This only
+  works on Paper and Bukkit. Velocity and BungeeCord only log updates to the console.
+
+<Callout type="info">
+  The update checker sends a request to `api.github.com`. Set `enabled = false` if your server
+  isn't allowed to make outgoing connections.
+</Callout>
 
 ## drivers.toml
 
@@ -185,6 +228,11 @@ GRADEWAY_DATABASE_PASSWORD=change-me
 <Callout type="warn">
   The `.env` file contains credentials. Make sure only the user running the server or proxy can
   read it, and never commit it to a public repository.
+</Callout>
+
+<Callout type="info">
+  Upgrading from **0.4.0**? Gradeway adds `defaultLocale` and the `[updateChecker]` section to
+  `config.toml` on its own and bumps its `version` to `5`. The update checker is turned on by default.
 </Callout>
 
 <Callout type="info">

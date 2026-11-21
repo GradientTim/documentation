@@ -45,12 +45,12 @@ buildMeta {
 }
 ```
 
-| Property / Method | Description                                  | Default        |
-|-------------------|----------------------------------------------|----------------|
-| `prefix`          | Text that starts a placeholder               | `{{buildMeta:` |
-| `suffix`          | Text that ends a placeholder                 | `}}`           |
-| `include(...)`    | Only process files matching these patterns   | All files      |
-| `exclude(...)`    | Skip files matching these patterns           | None           |
+| Property / Method | Description                                | Default        |
+| ----------------- | ------------------------------------------ | -------------- |
+| `prefix`          | Text that starts a placeholder             | `{{buildMeta:` |
+| `suffix`          | Text that ends a placeholder               | `}}`           |
+| `include(...)`    | Only process files matching these patterns | All files      |
+| `exclude(...)`    | Skip files matching these patterns         | None           |
 
 `include` and `exclude` take the same Ant-style patterns as Gradle's `copy { }`. Without `include`, all non-binary
 files are processed.

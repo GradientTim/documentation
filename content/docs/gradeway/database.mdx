@@ -178,17 +178,15 @@ gradeway_track_stages  -->  gradeway_tracks : track_id.id
 `auditLog.enabled` is `true` in `config.toml`, see [Configuration](/gradeway/admin/configure#audit-log).
 It has no foreign keys, so entries stay in place after the entity they describe is deleted.
 
-| Column                | Description                                                                                                 |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Column                | Description                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `actor_type`          | Who made the change: `player`, `console`, `command_block`, `command_minecart`, `rcon`, `entity`, `api` or `system`. |
-| `actor_identifier`    | Identifies the actor, e.g. the player's UUID or the plugin name for `api`. `null` for `console` and `system`. |
-| `target_type`         | What was changed, e.g. `role` or `player_role`, see [Notifications](/gradeway/admin/notifications#filters). |
-| `target_id`           | The ID of the changed entity. For an assignment, the ID of the first side (e.g. the player).               |
-| `target_secondary_id` | For an assignment, the ID of the second side (e.g. the role), otherwise `null`.                             |
-| `timestamp`           | When the change was recorded.                                                                               |
-| `action`              | `create`, `update` or `delete`.                                                                             |
-| `before` / `after`    | JSON snapshots of the target before and after the change. `before` is `null` on create, `after` on delete. |
+| `actor_identifier`    | Identifies the actor, e.g. the player's UUID or the plugin name for `api`. `null` for `console` and `system`.       |
+| `target_type`         | What was changed, e.g. `role` or `player_role`, see [Notifications](/gradeway/admin/notifications#filters).         |
+| `target_id`           | The ID of the changed entity. For an assignment, the ID of the first side (e.g. the player).                        |
+| `target_secondary_id` | For an assignment, the ID of the second side (e.g. the role), otherwise `null`.                                     |
+| `timestamp`           | When the change was recorded.                                                                                       |
+| `action`              | `create`, `update` or `delete`.                                                                                     |
+| `before` / `after`    | JSON snapshots of the target before and after the change. `before` is `null` on create, `after` on delete.          |
 
-<Callout type="info">
-  The audit log is not part of [backups](/gradeway/admin/backup).
-</Callout>
+<Callout type="info">The audit log is not part of [backups](/gradeway/admin/backup).</Callout>

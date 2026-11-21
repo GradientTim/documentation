@@ -34,7 +34,7 @@ All values are read lazily, so they work with the configuration cache and are fr
 Every helper takes the same three parameters:
 
 | Parameter             | Description                         | Default                                  |
-|-----------------------|-------------------------------------|------------------------------------------|
+| --------------------- | ----------------------------------- | ---------------------------------------- |
 | `fileName`            | Name of the generated file and type | Depends on the helper, e.g. `GitMeta`    |
 | `packageName`         | Package of the generated file       | `null`, which uses `fallbackPackageName` |
 | `fieldNamingStrategy` | Naming strategy for all fields      | `SCREAMING_SNAKE_CASE`                   |
@@ -45,8 +45,8 @@ is used in task names like `generateGitMetaBuildMeta` and in [placeholders](/bui
 constant names. Each helper can only be called once per project.
 
 <Callout type="idea">
-  A value never resolves to `null`. When something is not available (no git repository, not running on CI, ...), the
-  field falls back to the value listed in the tables below.
+  A value never resolves to `null`. When something is not available (no git repository, not running
+  on CI, ...), the field falls back to the value listed in the tables below.
 </Callout>
 
 ## Git
@@ -63,17 +63,17 @@ buildMeta {
 }
 ```
 
-| Field             | Type    | Description                                 | Fallback    | Group                  |
-|-------------------|---------|---------------------------------------------|-------------|------------------------|
-| `commitHash`      | String  | Full hash of `HEAD`                         | `"unknown"` | `includeIdentity`      |
-| `commitHashShort` | String  | Short hash of `HEAD`                        | `"unknown"` | `includeIdentity`      |
-| `branch`          | String  | Current branch                              | `"unknown"` | `includeIdentity`      |
-| `isDirty`         | Boolean | `true` if there are uncommitted changes     | `false`     | `includeIdentity`      |
-| `commitTimestamp` | Long    | Commit time of `HEAD` in epoch seconds      | `0`         | `includeCommitDetails` |
-| `commitMessage`   | String  | Subject line of the `HEAD` commit           | `""`        | `includeCommitDetails` |
-| `commitAuthor`    | String  | Author name of the `HEAD` commit            | `"unknown"` | `includeCommitDetails` |
-| `commitCount`     | Int     | Number of commits reachable from `HEAD`     | `0`         | `includeRepoStats`     |
-| `remoteUrl`       | String  | URL of the `origin` remote                  | `""`        | `includeRepoStats`     |
+| Field             | Type    | Description                             | Fallback    | Group                  |
+| ----------------- | ------- | --------------------------------------- | ----------- | ---------------------- |
+| `commitHash`      | String  | Full hash of `HEAD`                     | `"unknown"` | `includeIdentity`      |
+| `commitHashShort` | String  | Short hash of `HEAD`                    | `"unknown"` | `includeIdentity`      |
+| `branch`          | String  | Current branch                          | `"unknown"` | `includeIdentity`      |
+| `isDirty`         | Boolean | `true` if there are uncommitted changes | `false`     | `includeIdentity`      |
+| `commitTimestamp` | Long    | Commit time of `HEAD` in epoch seconds  | `0`         | `includeCommitDetails` |
+| `commitMessage`   | String  | Subject line of the `HEAD` commit       | `""`        | `includeCommitDetails` |
+| `commitAuthor`    | String  | Author name of the `HEAD` commit        | `"unknown"` | `includeCommitDetails` |
+| `commitCount`     | Int     | Number of commits reachable from `HEAD` | `0`         | `includeRepoStats`     |
+| `remoteUrl`       | String  | URL of the `origin` remote              | `""`        | `includeRepoStats`     |
 
 - On a detached `HEAD` (common on CI), `branch` uses the branch reported by the [CI system](#ci) instead. Without a
   CI system it is `"HEAD"`.
@@ -94,30 +94,31 @@ buildMeta {
 }
 ```
 
-| Field         | Type   | Description                              | Fallback                  |
-|---------------|--------|------------------------------------------|---------------------------|
-| `name`        | String | Project name                             |                           |
-| `path`        | String | Project path, e.g. `:app`                |                           |
-| `group`       | String | Project group                            | Gradle's default group    |
-| `version`     | String | Project version                          | `"unspecified"`           |
-| `description` | String | Project description                      | `""`                      |
+| Field         | Type   | Description               | Fallback               |
+| ------------- | ------ | ------------------------- | ---------------------- |
+| `name`        | String | Project name              |                        |
+| `path`        | String | Project path, e.g. `:app` |                        |
+| `group`       | String | Project group             | Gradle's default group |
+| `version`     | String | Project version           | `"unspecified"`        |
+| `description` | String | Project description       | `""`                   |
 
 `group`, `version` and `description` are read late, so values set after the helper call are still picked up.
 
 ### Multi-project builds
 
-| Parameter                | Description                                                                                  | Default |
-|--------------------------|----------------------------------------------------------------------------------------------|---------|
-| `useRootProjectFallback` | Uses the root project's `group`, `version` and `description` when the project sets none      | `false` |
-| `includeRootProject`     | Adds `rootName`, `rootGroup`, `rootVersion` and `rootDescription` fields                     | `false` |
+| Parameter                | Description                                                                             | Default |
+| ------------------------ | --------------------------------------------------------------------------------------- | ------- |
+| `useRootProjectFallback` | Uses the root project's `group`, `version` and `description` when the project sets none | `false` |
+| `includeRootProject`     | Adds `rootName`, `rootGroup`, `rootVersion` and `rootDescription` fields                | `false` |
 
 A value set by the project itself always wins over the root project's value.
 
 <Callout type="warn">
-  Both options read `group`, `version` or `description` of the root project, which is not allowed with
-  [Isolated Projects](https://docs.gradle.org/current/userguide/isolated_projects.html). With the default settings,
-  `registerProjectMeta()` is compatible. If you use Isolated Projects, set `group` and `version` in the root
-  `gradle.properties` instead: Gradle applies them to every project.
+  Both options read `group`, `version` or `description` of the root project, which is not allowed
+  with [Isolated Projects](https://docs.gradle.org/current/userguide/isolated_projects.html). With
+  the default settings, `registerProjectMeta()` is compatible. If you use Isolated Projects, set
+  `group` and `version` in the root `gradle.properties` instead: Gradle applies them to every
+  project.
 </Callout>
 
 ## CI
@@ -125,7 +126,7 @@ A value set by the project itself always wins over the root project's value.
 `registerCiMeta()` generates `CiMeta` from the environment variables of the CI system running the build:
 
 | Field         | Type    | Description                                   | Fallback |
-|---------------|---------|-----------------------------------------------|----------|
+| ------------- | ------- | --------------------------------------------- | -------- |
 | `isCi`        | Boolean | `true` when running on CI                     | `false`  |
 | `ciProvider`  | String  | ID of the CI system, see below                | `"none"` |
 | `buildNumber` | String  | Build or pipeline number                      | `""`     |
@@ -133,7 +134,7 @@ A value set by the project itself always wins over the root project's value.
 | `branch`      | String  | Branch being built, the source branch for PRs | `""`     |
 
 | CI system       | `ciProvider`      |
-|-----------------|-------------------|
+| --------------- | ----------------- |
 | GitHub Actions  | `github-actions`  |
 | GitLab CI       | `gitlab`          |
 | Jenkins         | `jenkins`         |
@@ -161,7 +162,7 @@ buildMeta {
 ```
 
 | Field            | Type   | Description                                              | Option             |
-|------------------|--------|----------------------------------------------------------|--------------------|
+| ---------------- | ------ | -------------------------------------------------------- | ------------------ |
 | `gradleVersion`  | String | Gradle version running the build                         |                    |
 | `javaVersion`    | String | Target Java version (toolchain or `targetCompatibility`) |                    |
 | `kotlinVersion`  | String | Kotlin standard library version, `""` without Kotlin     |                    |
@@ -174,7 +175,8 @@ buildMeta {
 `buildUser` and `hostName` are opt-in, since they put personal details into your application.
 
 <Callout type="warn">
-  `buildTimestamp` changes on every build, so the generated file and everything compiled against it is rebuilt every
-  time. For [reproducible builds](https://reproducible-builds.org/docs/source-date-epoch/), set the
-  `SOURCE_DATE_EPOCH` environment variable: its value is used instead of the current time.
+  `buildTimestamp` changes on every build, so the generated file and everything compiled against it
+  is rebuilt every time. For [reproducible
+  builds](https://reproducible-builds.org/docs/source-date-epoch/), set the `SOURCE_DATE_EPOCH`
+  environment variable: its value is used instead of the current time.
 </Callout>

@@ -1,0 +1,79 @@
+---
+title: Migration
+description: Turn an existing Hono app into the first version of a versioned API.
+icon: ArrowRightLeft
+---
+
+Your existing app becomes the first version. Routes, middleware, `onError` and `notFound` stay as they are, only the
+top-level app changes.
+
+## Without options
+
+```ts tab="Before"
+const app = new Hono().get('/users', (c) => c.json([{ name: 'Ada' }]))
+
+export default app
+```
+
+```ts tab="After"
+import { versioning } from '@gradienttim/hono-versioning'
+
+const v1 = new Hono().get('/users', (c) => c.json([{ name: 'Ada' }]))
+
+const app = versioning({
+  versions: { v1 },
+  defaultVersion: 'v1', // existing clients calling /users keep working
+})
+
+export default app
+```
+
+Since the default version is also served at `/`, existing clients keep calling `/users`, while new clients can
+already use `/v1/users`.
+
+## With options
+
+Options you passed to `new Hono()` move to the second argument of `versioning()`, which creates the top-level app:
+
+```ts tab="Before"
+const app = new Hono({ strict: false }).get('/users', (c) => c.json([{ name: 'Ada' }]))
+```
+
+```ts tab="After"
+const v1 = new Hono({ strict: false }).get('/users', (c) => c.json([{ name: 'Ada' }]))
+
+const app = versioning(
+  { versions: { v1 }, defaultVersion: 'v1' },
+  { strict: false }, // same options as `new Hono(...)`
+)
+```
+
+<Callout type="warn">
+  Keep the options on the version apps too if their own routing depends on them (e.g. `strict`).
+</Callout>
+
+## Adding the next version
+
+### Create the new version [step]
+
+Start from a copy of the routes that change, or build it from scratch:
+
+```ts
+const v2 = new Hono().get('/users', (c) => c.json({ data: [{ name: 'Ada' }] }))
+```
+
+### Register it [step]
+
+```ts
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v1',
+})
+```
+
+`v1` stays the default, so nothing changes for existing clients.
+
+### Switch the default [step]
+
+Once clients have moved to explicit versions, point `defaultVersion` to `v2`, or set
+[`redirectDefault: false`](/hono-versioning/strategies#default-version) to require a version on every request.

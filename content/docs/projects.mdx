@@ -3,14 +3,17 @@ title: Projects
 icon: FolderOpen
 ---
 
-
-import { FileCodeCorner, ShieldIcon } from 'lucide-react'
+import { FileCodeCorner, GitBranch, ShieldIcon } from 'lucide-react'
 
 <Cards>
   <Card href="/gradeway" title="Gradeway" icon={<ShieldIcon />}>
     A Minecraft permission gateway.
   </Card>
   <Card href="/buildmeta" title="BuildMeta" icon={<FileCodeCorner />}>
-    A Gradle plugin to generate build meta files for Kotlin (JVM / Multiplatform) and Java applications.
+    A Gradle plugin to generate build meta files for Kotlin (JVM / Multiplatform) and Java
+    applications.
+  </Card>
+  <Card href="/hono-versioning" title="Hono Versioning" icon={<GitBranch />}>
+    Type-safe API versioning for Hono, with URI, header and query strategies.
   </Card>
 </Cards>

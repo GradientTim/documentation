@@ -1,0 +1,58 @@
+---
+title: Install
+description: A guide on how to install Hono Versioning.
+icon: Download
+---
+
+Hono Versioning is published on **npm** as `@gradienttim/hono-versioning`. It requires `hono` **4.13.19** or newer
+as a peer dependency, so install both:
+
+![NPM Version](https://img.shields.io/npm/v/@gradienttim/hono-versioning?style=flat-square)
+
+```sh tab="bun"
+bun add @gradienttim/hono-versioning hono
+```
+
+```sh tab="npm"
+npm install @gradienttim/hono-versioning hono
+```
+
+```sh tab="pnpm"
+pnpm add @gradienttim/hono-versioning hono
+```
+
+```sh tab="yarn"
+yarn add @gradienttim/hono-versioning hono
+```
+
+```sh tab="deno"
+deno add npm:@gradienttim/hono-versioning npm:hono
+```
+
+The package is ESM only and ships its own TypeScript types. On Node.js, version **20** or newer is required.
+
+## First app
+
+```ts title="app.ts"
+import { Hono } from 'hono'
+import { versioning } from '@gradienttim/hono-versioning'
+
+const v1 = new Hono().get('/', (c) => c.text('Hello from v1!'))
+
+const app = versioning({
+  versions: { v1 },
+  defaultVersion: 'v1',
+})
+
+export default app
+```
+
+```sh
+curl localhost:3000/v1 # Hello from v1!
+curl localhost:3000/   # Hello from v1! (default version)
+```
+
+<Callout type="idea">
+  Already have a Hono app? The [migration guide](/hono-versioning/migration) shows how to turn it
+  into the first version without touching its routes.
+</Callout>

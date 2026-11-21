@@ -37,14 +37,14 @@ which is the default. Changes to these settings take effect after `/gradeway rel
 
 `targets` accepts the following target types:
 
-| Entity              | Target types                                                                                                        |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Roles               | `role`, `role_parent`, `role_group`, `role_attribute`, `role_permission`, `role_permission_template`                |
-| Groups              | `group`, `group_permission`, `group_permission_template`                                                            |
-| Players             | `player`, `player_role`, `player_attribute`, `player_permission`, `player_permission_template`                      |
-| Permissions         | `permission`                                                                                                        |
-| Permission template | `permission_template`, `permission_template_permission`                                                            |
-| Tracks              | `track`, `track_stage`                                                                                              |
+| Entity              | Target types                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| Roles               | `role`, `role_parent`, `role_group`, `role_attribute`, `role_permission`, `role_permission_template` |
+| Groups              | `group`, `group_permission`, `group_permission_template`                                             |
+| Players             | `player`, `player_role`, `player_attribute`, `player_permission`, `player_permission_template`       |
+| Permissions         | `permission`                                                                                         |
+| Permission template | `permission_template`, `permission_template_permission`                                              |
+| Tracks              | `track`, `track_stage`                                                                               |
 
 For example, to only get notified when roles are added to or removed from players:
 
@@ -62,13 +62,13 @@ The notification drivers below are part of Gradeway itself, there's nothing to d
 the `drivers/` folder. The webhook URLs are read from environment variables, see
 [Environment variables](/gradeway/admin/configure#environment-variables).
 
-| ID        | Sends to                          | Environment Variables                                                                                    |
-| --------- | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `console` | The server or proxy console       | -                                                                                                        |
-| `ingame`  | Online players in chat            | -                                                                                                        |
-| `discord` | A Discord channel via webhook     | `GRADEWAY_NOTIFICATION_DISCORD_WEBHOOK_URL` (required)                                                   |
-| `slack`   | A Slack channel via webhook       | `GRADEWAY_NOTIFICATION_SLACK_WEBHOOK_URL` (required)                                                     |
-| `webhook` | Any HTTP endpoint as JSON         | `GRADEWAY_NOTIFICATION_WEBHOOK_URL` (required)<br/>`GRADEWAY_NOTIFICATION_WEBHOOK_SECRET` (optional)     |
+| ID        | Sends to                      | Environment Variables                                                                                |
+| --------- | ----------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `console` | The server or proxy console   | -                                                                                                    |
+| `ingame`  | Online players in chat        | -                                                                                                    |
+| `discord` | A Discord channel via webhook | `GRADEWAY_NOTIFICATION_DISCORD_WEBHOOK_URL` (required)                                               |
+| `slack`   | A Slack channel via webhook   | `GRADEWAY_NOTIFICATION_SLACK_WEBHOOK_URL` (required)                                                 |
+| `webhook` | Any HTTP endpoint as JSON     | `GRADEWAY_NOTIFICATION_WEBHOOK_URL` (required)<br/>`GRADEWAY_NOTIFICATION_WEBHOOK_SECRET` (optional) |
 
 A driver whose required variable is missing is skipped with an error in the console, the other
 drivers keep working.
@@ -168,10 +168,10 @@ name of the plugin for `api`, and is `null` for `console` and `system`.
 
 Every request carries the following headers:
 
-| Header                 | Value                                                                                  |
-| ---------------------- | -------------------------------------------------------------------------------------- |
-| `Content-Type`         | `application/json`                                                                     |
-| `X-Gradeway-Event`     | The notification type, currently always `audit`.                                       |
+| Header                 | Value                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| `Content-Type`         | `application/json`                                                                          |
+| `X-Gradeway-Event`     | The notification type, currently always `audit`.                                            |
 | `X-Gradeway-Signature` | `sha256=<hex>`, the HMAC-SHA256 of the raw body using your secret. Only sent with a secret. |
 
 <Callout type="idea">

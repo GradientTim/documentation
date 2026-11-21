@@ -6,12 +6,12 @@ description: A guide on how to correctly configure Gradeway as a server administ
 Gradeway splits its configuration into three TOML files, all created inside Gradeway's data
 directory (`plugins/gradeway/`) the first time it loads:
 
-| File            | Purpose                                                                          |
-| --------------- | -------------------------------------------------------------------------------- |
+| File            | Purpose                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `config.toml`   | General settings: message appearance, default locale, import limits, default roles, audit log and update checker. |
-| `drivers.toml`  | Which database, messaging and notification [drivers](/gradeway/admin/drivers) to use. |
-| `platform.toml` | Settings that only apply to the platform you're running (Paper, Velocity, ...).  |
-| `.env`          | Connection credentials and other variables read by the drivers (create it yourself). |
+| `drivers.toml`  | Which database, messaging and notification [drivers](/gradeway/admin/drivers) to use.                             |
+| `platform.toml` | Settings that only apply to the platform you're running (Paper, Velocity, ...).                                   |
+| `.env`          | Connection credentials and other variables read by the drivers (create it yourself).                              |
 
 Every TOML file carries a `version` field. Gradeway bumps it automatically when a newer release
 adds options, so you don't need to touch it yourself.
@@ -119,8 +119,8 @@ Hangar. A failed check only logs a warning and doesn't affect anything else.
   works on Paper and Bukkit. Velocity and BungeeCord only log updates to the console.
 
 <Callout type="info">
-  The update checker sends a request to `api.github.com`. Set `enabled = false` if your server
-  isn't allowed to make outgoing connections.
+  The update checker sends a request to `api.github.com`. Set `enabled = false` if your server isn't
+  allowed to make outgoing connections.
 </Callout>
 
 ## drivers.toml
@@ -226,13 +226,14 @@ GRADEWAY_DATABASE_PASSWORD=change-me
 ```
 
 <Callout type="warn">
-  The `.env` file contains credentials. Make sure only the user running the server or proxy can
-  read it, and never commit it to a public repository.
+  The `.env` file contains credentials. Make sure only the user running the server or proxy can read
+  it, and never commit it to a public repository.
 </Callout>
 
 <Callout type="info">
   Upgrading from **0.4.0**? Gradeway adds `defaultLocale` and the `[updateChecker]` section to
-  `config.toml` on its own and bumps its `version` to `5`. The update checker is turned on by default.
+  `config.toml` on its own and bumps its `version` to `5`. The update checker is turned on by
+  default.
 </Callout>
 
 <Callout type="info">
@@ -243,7 +244,7 @@ GRADEWAY_DATABASE_PASSWORD=change-me
 </Callout>
 
 <Callout type="info">
-  Upgrading from **0.2.x**? The `[database.variables]`, `[messaging.variables]` and `[env]`
-  sections are gone. Move your variables into `plugins/gradeway/.env` (or the system environment),
-  and move your `database`/`messaging` settings from `config.toml` into `drivers.toml`.
+  Upgrading from **0.2.x**? The `[database.variables]`, `[messaging.variables]` and `[env]` sections
+  are gone. Move your variables into `plugins/gradeway/.env` (or the system environment), and move
+  your `database`/`messaging` settings from `config.toml` into `drivers.toml`.
 </Callout>

@@ -1,0 +1,133 @@
+---
+title: Strategies
+description: Read the requested version from the path, a header or a query parameter.
+icon: Route
+---
+
+The `strategy` option decides where the version is read from. Every strategy supports a
+[default version](#default-version) for requests that don't name one.
+
+| Strategy                | Request                            | Options                                    |
+| ----------------------- | ---------------------------------- | ------------------------------------------ |
+| [`uri`](#uri) (default) | `GET /v1/users`                    | `redirectDefault`                          |
+| [`header`](#header)     | `GET /users` + `X-API-Version: v1` | `headerName`, `redirectDefault`, `onError` |
+| [`query`](#query)       | `GET /users?version=v1`            | `queryName`, `redirectDefault`, `onError`  |
+
+## URI
+
+Every version is mounted under its own path segment. This is the default, so `strategy` can be left out:
+
+```ts title="app.ts"
+const v1 = new Hono().get('/', (c) => c.text('Welcome, v1!'))
+const v2 = new Hono()
+  .get('/', (c) => c.text('Welcome, v2!'))
+  .get('/new', (c) => c.text('Only in v2!'))
+
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v1',
+  // strategy: { type: 'uri' },
+})
+
+// GET /v1      -> Welcome, v1!
+// GET /v2/new  -> Only in v2!
+// GET /        -> Welcome, v1! (default version)
+// GET /v1/new  -> 404
+// GET /v3      -> 404
+```
+
+A route a version doesn't define, or a version that isn't registered, is a regular `404`.
+
+## Header
+
+All versions share the same paths and the `X-API-Version` header picks one:
+
+```ts title="app.ts"
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: { type: 'header' },
+})
+```
+
+```sh
+curl localhost:3000/users -H 'X-API-Version: v1' # v1
+curl localhost:3000/users                        # v2 (default version)
+curl localhost:3000/users -H 'X-API-Version: 2'  # 400 Unknown API version '2'
+```
+
+Use `headerName` to read another header:
+
+```ts title="app.ts"
+versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: { type: 'header', headerName: 'Accept-Version' },
+})
+```
+
+## Query
+
+Like the header strategy, but the version is read from the `version` query parameter:
+
+```ts title="app.ts"
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: { type: 'query' },
+})
+```
+
+```sh
+curl 'localhost:3000/status?version=v1' # v1
+curl 'localhost:3000/status'            # v2 (default version)
+```
+
+Use `queryName` to read another parameter:
+
+```ts title="app.ts"
+versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: { type: 'query', queryName: 'api' }, // ?api=v1
+})
+```
+
+## How header and query routing works
+
+With the header and query strategies, the top-level app registers every route of every version and forwards the
+request to the selected version app. A few things follow from that:
+
+- A request for a path the selected version doesn't define goes to **that version's** `notFound` handler, even if
+  another version defines the path.
+- Middleware of the selected version runs as usual, and middleware of other versions does not.
+- A missing or unknown version is reported through [`onError`](/hono-versioning/errors) for **any** path, including
+  paths no version defines.
+- `showRoutes(app)` lists the real routes of all versions.
+
+## Default version
+
+Requests that don't name a version are served by `defaultVersion`:
+
+- **URI**: the default version is also mounted at `/`, so `/users` is the same as `/v2/users`.
+- **Header / query**: a request without the header or parameter is sent to the default version.
+
+Set `redirectDefault: false` to require a version on every request:
+
+```ts title="app.ts"
+versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: { type: 'query', queryName: 'api', redirectDefault: false },
+})
+```
+
+| Strategy       | Request without a version, `redirectDefault: false`            |
+| -------------- | -------------------------------------------------------------- |
+| URI            | `404`, since nothing is mounted at `/`                         |
+| Header / query | `400 Missing API version (<name>)`, or your `onError` response |
+
+<Callout type="idea">
+  `defaultVersion` is still required with `redirectDefault: false`. It is what you would serve as
+  soon as you turn the fallback back on.
+</Callout>

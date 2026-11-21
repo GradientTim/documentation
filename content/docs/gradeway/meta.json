@@ -3,10 +3,5 @@
   "description": "A Minecraft permission gateway",
   "icon": "asset:gradeway",
   "root": true,
-  "pages": [
-    "index",
-    "commands",
-    "database",
-    "..."
-  ]
+  "pages": ["index", "commands", "database", "..."]
 }

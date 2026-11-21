@@ -1,0 +1,86 @@
+---
+title: Hono Versioning
+description: Type-safe API versioning for Hono, with URI, header and query strategies.
+icon: GitBranch
+---
+
+## What is Hono Versioning?
+
+Hono Versioning lets you serve multiple versions of an API from a single [Hono](https://hono.dev) app. Every version
+is a plain `Hono` instance, and `versioning()` combines them into one app that picks the right version per request,
+either from the path, a header or a query parameter.
+
+```ts title="app.ts"
+import { Hono } from 'hono'
+import { versioning } from '@gradienttim/hono-versioning'
+
+const v1 = new Hono().get('/users', (c) => c.json([{ name: 'Ada' }]))
+const v2 = new Hono().get('/users', (c) => c.json({ data: [{ name: 'Ada' }] }))
+
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+})
+
+// GET /v1/users -> v1
+// GET /v2/users -> v2
+// GET /users    -> v2 (default version)
+
+export default app
+```
+
+## Use this if ...
+
+- You want to version your API by **path** (`/v1/users`), **header** (`X-API-Version: v1`) or **query**
+  (`?version=v1`).
+- You want the [RPC client](/hono-versioning/client) (`hc`) to **know every version** and only offer the routes that
+  version actually has.
+- You want each version to be a **normal Hono app** with its own middleware, `onError` and `notFound`.
+- You want a **default version** for clients that don't send one, or want to require a version on every request.
+- You want to control the **error response** for missing or unknown versions.
+- You want to keep your existing app and add versioning **without rewriting routes**.
+
+## Questions and Answers
+
+**1. Which runtimes are supported?**
+
+- Every runtime Hono runs on: _Bun_, _Deno_, _Node.js_ (20 or newer), _Cloudflare Workers_ and other edge runtimes.
+  Bindings (`c.env`) and the execution context are passed through to the version apps.
+
+**2. Which Hono version is required?**
+
+- Hono **4.13.19** or newer, installed next to the library as a peer dependency.
+
+**3. What can a version be called?**
+
+- Any string. Keys are used exactly as given, so `v1`, `2` or a date like `2024-06-01` all work. See
+  [version keys](/hono-versioning/usage#version-keys).
+
+**4. Does it work with `showRoutes`?**
+
+- Yes. With every strategy, the routing table lists the real routes of your versions instead of a single
+  catch-all route.
+
+**5. Is Hono Versioning free and open-source?**
+
+- Sure, **always** free and [open-source](https://github.com/GradientTim/hono-versioning) :)
+
+## Next steps
+
+<Cards>
+  <Card
+    title="Installation"
+    description="Learn how to add Hono Versioning to your project."
+    href="/hono-versioning/install"
+  />
+  <Card
+    title="Usage"
+    description="Learn how to register versions and pick a default."
+    href="/hono-versioning/usage"
+  />
+  <Card
+    title="Strategies"
+    description="Version by path, header or query parameter."
+    href="/hono-versioning/strategies"
+  />
+</Cards>

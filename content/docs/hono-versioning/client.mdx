@@ -1,0 +1,80 @@
+---
+title: Typed Client
+description: Use Hono's RPC client with every version and its routes.
+icon: Braces
+---
+
+The app returned by `versioning()` carries the routes of every version in its type, so Hono's
+[RPC client](https://hono.dev/docs/guides/rpc#client) (`hc`) knows exactly which routes each version has. Export the
+type of the app and pass it to `hc`:
+
+```ts title="app.ts"
+const app = versioning({ versions: { v1, v2 }, defaultVersion: 'v1' })
+
+export type App = typeof app
+export default app
+```
+
+```ts title="client.ts"
+import { hc } from 'hono/client'
+import type { App } from './app'
+
+const client = hc<App>('http://localhost:3000')
+```
+
+## URI
+
+Every version is a property of the client, and the default version is also available at the root:
+
+```ts title="client.ts"
+await client.v1.users.$get()
+await client.v2.users[':id'].$get({ param: { id: '1' } })
+
+// The default version at `/`:
+await client.users.$get()
+
+// Version keys that aren't valid identifiers use bracket access:
+await client['2024-06-01'].me.$get()
+```
+
+Routes that a version doesn't define are a type error, e.g. `client.v1.new` when only `v2` has `/new`.
+
+## Header
+
+The client requires the version header on every call, and only accepts registered versions:
+
+```ts title="client.ts"
+await client.users.$get({ header: { 'X-API-Version': 'v1' } })
+
+// @ts-expect-error: 'v3' is not a registered version
+await client.users.$get({ header: { 'X-API-Version': 'v3' } })
+```
+
+A custom `headerName` is reflected in the type, e.g. `{ header: { 'Accept-Version': 'v1' } }`.
+
+## Query
+
+The same applies to the query strategy, with the version as a query parameter:
+
+```ts title="client.ts"
+await client.status.$get({ query: { version: 'v1' } })
+
+// With `queryName: 'api'`:
+await client.status.$get({ query: { api: 'v1' } })
+```
+
+<Callout type="idea">
+  With the header and query strategies the client always asks for a version, even when the server
+  would fall back to the default version. Sending it explicitly keeps clients pinned to the version
+  they were written against.
+</Callout>
+
+## Mounted apps
+
+When the versioned app is [mounted](/hono-versioning/usage#mounting) inside another app, export the type of the
+outer app. The mount path becomes part of the client:
+
+```ts title="client.ts"
+await client.api.v1.items.$get()
+await client.api.items.$get() // default version
+```

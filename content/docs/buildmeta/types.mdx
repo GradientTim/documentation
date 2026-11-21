@@ -9,7 +9,7 @@ icon: Braces
 The type of a field is taken from its resolved value. The following types are supported out of the box:
 
 | Type                       | Java | Kotlin JVM | Kotlin Multiplatform | Constant |
-|----------------------------|:----:|:----------:|:--------------------:|:--------:|
+| -------------------------- | :--: | :--------: | :------------------: | :------: |
 | `String`                   |  ✓   |     ✓      |          ✓           |    ✓     |
 | `Char`                     |  ✓   |     ✓      |          ✓           |    ✓     |
 | `Int`, `Long`              |  ✓   |     ✓      |          ✓           |    ✓     |
@@ -31,8 +31,8 @@ Constant types become `const val` in Kotlin and compile-time constants in Java. 
 fields initialized with a parse call, e.g. `Uuid.parse("...")` or `Instant.parse("...")`.
 
 <Callout type="idea">
-  Fields using `Uuid` or `kotlin.time.Instant` add the required `@file:OptIn(...)` annotation to the generated file
-  automatically.
+  Fields using `Uuid` or `kotlin.time.Instant` add the required `@file:OptIn(...)` annotation to the
+  generated file automatically.
 </Callout>
 
 ## Custom type adapters
@@ -99,14 +99,14 @@ object UriDataType : DataType<URI>() {
 }
 ```
 
-| Member        | Description                                                                             |
-|---------------|-----------------------------------------------------------------------------------------|
-| `classType`   | The type this adapter handles. Values that are an instance of it use this adapter.      |
-| `needsImport` | Whether the type is imported in the generated file.                                     |
-| `constant`    | Whether the field is generated as a constant. Defaults to `false`.                      |
-| `optIns`      | Opt-in annotations the generated file needs (Kotlin only). Defaults to none.            |
-| `typeName`    | The type written into the generated file. Defaults to the simple name of `classType`.   |
-| `format`      | Returns the source code expression for a value.                                         |
+| Member        | Description                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------- |
+| `classType`   | The type this adapter handles. Values that are an instance of it use this adapter.                 |
+| `needsImport` | Whether the type is imported in the generated file.                                                |
+| `constant`    | Whether the field is generated as a constant. Defaults to `false`.                                 |
+| `optIns`      | Opt-in annotations the generated file needs (Kotlin only). Defaults to none.                       |
+| `typeName`    | The type written into the generated file. Defaults to the simple name of `classType`.              |
+| `format`      | Returns the source code expression for a value.                                                    |
 | `formatText`  | Returns the plain text used for [placeholders](/buildmeta/placeholders). Defaults to `toString()`. |
 
 ### Escaping strings
@@ -114,16 +114,16 @@ object UriDataType : DataType<URI>() {
 Never put a value into a string literal by hand: a `"`, `\` or `$` in it breaks the generated file. `Literals` returns
 correctly escaped and quoted literals:
 
-| Function                                           | Result for `a"b`      |
-|----------------------------------------------------|-----------------------|
-| `Literals.kotlinString(value)`                     | `"a\"b"`              |
-| `Literals.javaString(value)`                       | `"a\"b"`              |
+| Function                                                | Result for `a"b`      |
+| ------------------------------------------------------- | --------------------- |
+| `Literals.kotlinString(value)`                          | `"a\"b"`              |
+| `Literals.javaString(value)`                            | `"a\"b"`              |
 | `Literals.kotlinChar(char)` / `Literals.javaChar(char)` | a quoted char literal |
 
 `kotlinString` also escapes `$`, so string templates in values are kept as text. From Groovy, call them the same way,
 e.g. `Literals.javaString(it.pattern())`.
 
 <Callout type="warn">
-  Only one adapter per type can be registered. Your own adapters are checked before the built-in ones, so you can
-  also use them to change how a built-in type is generated.
+  Only one adapter per type can be registered. Your own adapters are checked before the built-in
+  ones, so you can also use them to change how a built-in type is generated.
 </Callout>

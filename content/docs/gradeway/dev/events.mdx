@@ -118,62 +118,62 @@ the change, and so does every post-event except the lifecycle events. Events tha
 groups and players alike carry a `subject` (`EventSubject.Role`, `EventSubject.Group` or
 `EventSubject.Player`) with the entity's ID.
 
-| Package       | Pre-event                         | Post-event                         |
-| ------------- | --------------------------------- | ---------------------------------- |
-| `role`        | `RoleCreateEvent`                 | `RoleCreatedEvent`                 |
-|               | `RoleDeleteEvent`                 | `RoleDeletedEvent`                 |
-|               | `RoleRenameEvent`                 | `RoleRenamedEvent`                 |
-|               | `RoleWeightChangeEvent`           | `RoleWeightChangedEvent`           |
-|               | `RoleDefaultChangeEvent`          | `RoleDefaultChangedEvent`          |
-|               | `RoleParentAddEvent`              | `RoleParentAddedEvent`             |
-|               | `RoleParentRemoveEvent`           | `RoleParentRemovedEvent`           |
-| `group`       | `GroupCreateEvent`                | `GroupCreatedEvent`                |
-|               | `GroupDeleteEvent`                | `GroupDeletedEvent`                |
-|               | `GroupRenameEvent`                | `GroupRenamedEvent`                |
-|               | `GroupDefaultWeightChangeEvent`   | `GroupDefaultWeightChangedEvent`   |
-|               | `GroupRoleAddEvent`               | `GroupRoleAddedEvent`              |
-|               | `GroupRoleRemoveEvent`            | `GroupRoleRemovedEvent`            |
-| `player`      | `PlayerCreateEvent`               | `PlayerCreatedEvent`               |
-|               | `PlayerDeleteEvent`               | `PlayerDeletedEvent`               |
-|               | `PlayerRenameEvent`               | `PlayerRenamedEvent`               |
-|               | `PlayerWeightChangeEvent`         | `PlayerWeightChangedEvent`         |
-|               | `PlayerPrimaryRoleChangeEvent`    | `PlayerPrimaryRoleChangedEvent`    |
-|               | `PlayerRoleAddEvent`              | `PlayerRoleAddedEvent`             |
-|               | `PlayerRoleRemoveEvent`           | `PlayerRoleRemovedEvent`           |
-|               | `PlayerRoleExpiryChangeEvent`     | `PlayerRoleExpiryChangedEvent`     |
-|               | `PlayerRolePauseEvent`            | `PlayerRolePausedEvent`            |
-|               | `PlayerRoleResumeEvent`           | `PlayerRoleResumedEvent`           |
-|               | -                                 | `PlayerRoleExpiredEvent`           |
-| `track`       | `TrackCreateEvent`                | `TrackCreatedEvent`                |
-|               | `TrackDeleteEvent`                | `TrackDeletedEvent`                |
-|               | `TrackSlugChangeEvent`            | `TrackSlugChangedEvent`            |
-|               | `TrackStageAddEvent`              | `TrackStageAddedEvent`             |
-|               | `TrackStageRemoveEvent`           | `TrackStageRemovedEvent`           |
-|               | `TrackStageMoveEvent`             | `TrackStageMovedEvent`             |
-|               | `PlayerPromoteEvent`              | `PlayerPromotedEvent`              |
-|               | `PlayerDemoteEvent`               | `PlayerDemotedEvent`               |
-| `permission`  | `PermissionNodeCreateEvent`       | `PermissionNodeCreatedEvent`       |
-|               | `PermissionNodeDeleteEvent`       | `PermissionNodeDeletedEvent`       |
-|               | `PermissionNodeValueChangeEvent`  | `PermissionNodeValueChangedEvent`  |
-|               | `PermissionNodeTypeChangeEvent`   | `PermissionNodeTypeChangedEvent`   |
-|               | `PermissionsAssignEvent`          | `PermissionsAssignedEvent`         |
-|               | `PermissionsUnassignEvent`        | `PermissionsUnassignedEvent`       |
-|               | `PermissionsClearEvent`           | `PermissionsClearedEvent`          |
-| `template`    | `TemplateCreateEvent`             | `TemplateCreatedEvent`             |
-|               | `TemplateDeleteEvent`             | `TemplateDeletedEvent`             |
-|               | `TemplateRenameEvent`             | `TemplateRenamedEvent`             |
-|               | `TemplateAssignedToChangeEvent`   | `TemplateAssignedToChangedEvent`   |
-|               | `TemplatePermissionAddEvent`      | `TemplatePermissionAddedEvent`     |
-|               | `TemplatePermissionRemoveEvent`   | `TemplatePermissionRemovedEvent`   |
-|               | `TemplatePermissionsClearEvent`   | `TemplatePermissionsClearedEvent`  |
-|               | `TemplateLinkEvent`               | `TemplateLinkedEvent`              |
-|               | `TemplateUnlinkEvent`             | `TemplateUnlinkedEvent`            |
-|               | `TemplateApplyEvent`              | `TemplateAppliedEvent`             |
-|               | `TemplateRevokeEvent`             | `TemplateRevokedEvent`             |
-| `attribute`   | `AttributeAddEvent`               | `AttributeAddedEvent`              |
-|               | `AttributeUpdateEvent`            | `AttributeUpdatedEvent`            |
-|               | `AttributeRemoveEvent`            | `AttributeRemovedEvent`            |
-|               | `AttributesClearEvent`            | `AttributesClearedEvent`           |
+| Package      | Pre-event                        | Post-event                        |
+| ------------ | -------------------------------- | --------------------------------- |
+| `role`       | `RoleCreateEvent`                | `RoleCreatedEvent`                |
+|              | `RoleDeleteEvent`                | `RoleDeletedEvent`                |
+|              | `RoleRenameEvent`                | `RoleRenamedEvent`                |
+|              | `RoleWeightChangeEvent`          | `RoleWeightChangedEvent`          |
+|              | `RoleDefaultChangeEvent`         | `RoleDefaultChangedEvent`         |
+|              | `RoleParentAddEvent`             | `RoleParentAddedEvent`            |
+|              | `RoleParentRemoveEvent`          | `RoleParentRemovedEvent`          |
+| `group`      | `GroupCreateEvent`               | `GroupCreatedEvent`               |
+|              | `GroupDeleteEvent`               | `GroupDeletedEvent`               |
+|              | `GroupRenameEvent`               | `GroupRenamedEvent`               |
+|              | `GroupDefaultWeightChangeEvent`  | `GroupDefaultWeightChangedEvent`  |
+|              | `GroupRoleAddEvent`              | `GroupRoleAddedEvent`             |
+|              | `GroupRoleRemoveEvent`           | `GroupRoleRemovedEvent`           |
+| `player`     | `PlayerCreateEvent`              | `PlayerCreatedEvent`              |
+|              | `PlayerDeleteEvent`              | `PlayerDeletedEvent`              |
+|              | `PlayerRenameEvent`              | `PlayerRenamedEvent`              |
+|              | `PlayerWeightChangeEvent`        | `PlayerWeightChangedEvent`        |
+|              | `PlayerPrimaryRoleChangeEvent`   | `PlayerPrimaryRoleChangedEvent`   |
+|              | `PlayerRoleAddEvent`             | `PlayerRoleAddedEvent`            |
+|              | `PlayerRoleRemoveEvent`          | `PlayerRoleRemovedEvent`          |
+|              | `PlayerRoleExpiryChangeEvent`    | `PlayerRoleExpiryChangedEvent`    |
+|              | `PlayerRolePauseEvent`           | `PlayerRolePausedEvent`           |
+|              | `PlayerRoleResumeEvent`          | `PlayerRoleResumedEvent`          |
+|              | -                                | `PlayerRoleExpiredEvent`          |
+| `track`      | `TrackCreateEvent`               | `TrackCreatedEvent`               |
+|              | `TrackDeleteEvent`               | `TrackDeletedEvent`               |
+|              | `TrackSlugChangeEvent`           | `TrackSlugChangedEvent`           |
+|              | `TrackStageAddEvent`             | `TrackStageAddedEvent`            |
+|              | `TrackStageRemoveEvent`          | `TrackStageRemovedEvent`          |
+|              | `TrackStageMoveEvent`            | `TrackStageMovedEvent`            |
+|              | `PlayerPromoteEvent`             | `PlayerPromotedEvent`             |
+|              | `PlayerDemoteEvent`              | `PlayerDemotedEvent`              |
+| `permission` | `PermissionNodeCreateEvent`      | `PermissionNodeCreatedEvent`      |
+|              | `PermissionNodeDeleteEvent`      | `PermissionNodeDeletedEvent`      |
+|              | `PermissionNodeValueChangeEvent` | `PermissionNodeValueChangedEvent` |
+|              | `PermissionNodeTypeChangeEvent`  | `PermissionNodeTypeChangedEvent`  |
+|              | `PermissionsAssignEvent`         | `PermissionsAssignedEvent`        |
+|              | `PermissionsUnassignEvent`       | `PermissionsUnassignedEvent`      |
+|              | `PermissionsClearEvent`          | `PermissionsClearedEvent`         |
+| `template`   | `TemplateCreateEvent`            | `TemplateCreatedEvent`            |
+|              | `TemplateDeleteEvent`            | `TemplateDeletedEvent`            |
+|              | `TemplateRenameEvent`            | `TemplateRenamedEvent`            |
+|              | `TemplateAssignedToChangeEvent`  | `TemplateAssignedToChangedEvent`  |
+|              | `TemplatePermissionAddEvent`     | `TemplatePermissionAddedEvent`    |
+|              | `TemplatePermissionRemoveEvent`  | `TemplatePermissionRemovedEvent`  |
+|              | `TemplatePermissionsClearEvent`  | `TemplatePermissionsClearedEvent` |
+|              | `TemplateLinkEvent`              | `TemplateLinkedEvent`             |
+|              | `TemplateUnlinkEvent`            | `TemplateUnlinkedEvent`           |
+|              | `TemplateApplyEvent`             | `TemplateAppliedEvent`            |
+|              | `TemplateRevokeEvent`            | `TemplateRevokedEvent`            |
+| `attribute`  | `AttributeAddEvent`              | `AttributeAddedEvent`             |
+|              | `AttributeUpdateEvent`           | `AttributeUpdatedEvent`           |
+|              | `AttributeRemoveEvent`           | `AttributeRemovedEvent`           |
+|              | `AttributesClearEvent`           | `AttributesClearedEvent`          |
 
 All events live in `dev.gradienttim.gradeway.events.<package>`.
 
@@ -182,12 +182,12 @@ All events live in `dev.gradienttim.gradeway.events.<package>`.
 The events in `dev.gradienttim.gradeway.events.lifecycle` are fired on the local server only and
 can't be canceled:
 
-| Event                     | Fired when                                     |
-| ------------------------- | ---------------------------------------------- |
-| `GradewayLoadedEvent`     | Gradeway finished loading.                     |
+| Event                     | Fired when                                          |
+| ------------------------- | --------------------------------------------------- |
+| `GradewayLoadedEvent`     | Gradeway finished loading.                          |
 | `GradewayEnabledEvent`    | Gradeway was enabled and connected to its database. |
-| `GradewayDisabledEvent`   | Gradeway was disabled.                         |
-| `GradewayReloadedEvent`   | The configuration was reloaded.                |
-| `BackupExportedEvent`     | A backup was exported.                         |
-| `BackupImportedEvent`     | A backup was imported.                         |
-| `MigrationCompletedEvent` | A migration finished.                          |
+| `GradewayDisabledEvent`   | Gradeway was disabled.                              |
+| `GradewayReloadedEvent`   | The configuration was reloaded.                     |
+| `BackupExportedEvent`     | A backup was exported.                              |
+| `BackupImportedEvent`     | A backup was imported.                              |
+| `MigrationCompletedEvent` | A migration finished.                               |

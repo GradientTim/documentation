@@ -1,0 +1,7 @@
+{
+  "title": "Hono Versioning",
+  "description": "Type-safe API versioning for Hono, with URI, header and query strategies.",
+  "icon": "GitBranch",
+  "root": true,
+  "pages": ["index", "install", "usage", "strategies", "errors", "client", "migration"]
+}

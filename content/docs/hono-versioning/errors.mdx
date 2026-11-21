@@ -1,0 +1,84 @@
+---
+title: Error Handling
+description: Customize the response for missing or unknown versions.
+icon: TriangleAlert
+---
+
+With the [header and query strategies](/hono-versioning/strategies), a request can fail to select a version for two
+reasons:
+
+| Reason    | When                                                                                                 | Default response                    |
+| --------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `missing` | No version was sent and [`redirectDefault`](/hono-versioning/strategies#default-version) is `false`. | `400 Missing API version (<name>)`  |
+| `unknown` | A version was sent, but it isn't a registered key.                                                   | `400 Unknown API version '<value>'` |
+
+The default responses are thrown as an `HTTPException`, so an `onError` handler on the app returned by `versioning()`
+(or on an app it is mounted in) receives them like any other Hono error.
+
+<Callout type="idea">
+  The URI strategy has no version errors. An unknown version is simply a path that doesn't exist,
+  and gets the usual `404`.
+</Callout>
+
+## Custom error responses
+
+Pass `onError` to the strategy to return your own response. It receives the context and details about the failure:
+
+```ts title="app.ts"
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+  strategy: {
+    type: 'header',
+    headerName: 'Accept-Version',
+    redirectDefault: false,
+    onError: (c, info) => {
+      if (info.reason === 'missing') {
+        return c.json(
+          { error: 'missing_version', header: info.name, available: info.available },
+          400,
+        )
+      }
+
+      return c.json(
+        { error: 'unknown_version', requested: info.raw, available: info.available },
+        400,
+      )
+    },
+  },
+})
+```
+
+```sh
+curl localhost:3000/ping
+# 400 {"error":"missing_version","header":"Accept-Version","available":["v1","v2"]}
+
+curl localhost:3000/ping -H 'Accept-Version: v3'
+# 400 {"error":"unknown_version","requested":"v3","available":["v1","v2"]}
+```
+
+`onError` may return a `Response` or a `Promise<Response>`, and it may also throw (e.g. an `HTTPException`).
+
+## Error info
+
+| Property    | Type                     | Description                                                   |
+| ----------- | ------------------------ | ------------------------------------------------------------- |
+| `reason`    | `'missing' \| 'unknown'` | Why no version could be selected.                             |
+| `raw`       | `string`                 | The value that was sent. Only present for `'unknown'`.        |
+| `strategy`  | `'header' \| 'query'`    | The strategy that read the version.                           |
+| `name`      | `string`                 | The header or query name that was read, e.g. `X-API-Version`. |
+| `available` | `string[]`               | The registered version keys, e.g. `['v1', 'v2']`.             |
+
+To type a handler defined outside the options, use the exported `VersionErrorHandler` type:
+
+```ts title="errors.ts"
+import type { VersionErrorHandler } from '@gradienttim/hono-versioning'
+
+export const onVersionError: VersionErrorHandler = (c, info) =>
+  c.json({ error: `${info.reason}_version`, available: info.available }, 400)
+```
+
+## Errors inside a version
+
+Errors thrown by a route are handled by the `onError` of the version app that serves the request. Register a handler
+on each version, or on the top-level app for errors that the versions don't handle themselves.

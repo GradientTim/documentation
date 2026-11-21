@@ -8,11 +8,11 @@ Gradeway registers a single root command, built with Brigadier, so every platfor
 command tree including tab-completion. The root literal and its aliases depend on the platform
 module you're running:
 
-| Platform   | Command               | Aliases                                                         |
-| ---------- | --------------------- | --------------------------------------------------------------- |
-| Paper      | `/gradeway`           | `/gw`, `/gradewayp`, `/gwpaper`, `/gwp`                         |
-| Bukkit     | `/gradeway`           | `/gw`, `/gradewayb`, `/gwbukkit`, `/gwb`                        |
-| Velocity   | `/gradewayvelocity`   | `/gradewayv`, `/gwvelocity`, `/gwv`                             |
+| Platform   | Command               | Aliases                                                                 |
+| ---------- | --------------------- | ----------------------------------------------------------------------- |
+| Paper      | `/gradeway`           | `/gw`, `/gradewayp`, `/gwpaper`, `/gwp`                                 |
+| Bukkit     | `/gradeway`           | `/gw`, `/gradewayb`, `/gwbukkit`, `/gwb`                                |
+| Velocity   | `/gradewayvelocity`   | `/gradewayv`, `/gwvelocity`, `/gwv`                                     |
 | BungeeCord | `/gradewaybungeecord` | `/gradewaybc`, `/gwbungeecord`, `/gwbc`, `/gwbungee`, `/gradewaybungee` |
 
 The proxies use their own literal so the proxy command never collides with the `/gradeway` command
@@ -25,8 +25,8 @@ of a backend server behind it. The examples below use `/gradeway`.
 
 <Callout type="warn">
   Arguments are parsed as Brigadier strings. Values containing anything other than letters, digits
-  and `_ - . +`, such as spaces or `*`, must be wrapped in double quotes, for example
-  `"gradeway.*"` or `"1D 12h"`.
+  and `_ - . +`, such as spaces or `*`, must be wrapped in double quotes, for example `"gradeway.*"`
+  or `"1D 12h"`.
 </Callout>
 
 ## Permissions of command groups
@@ -35,16 +35,16 @@ Every command group requires its own parent permission in addition to the permis
 individual sub-command. For example, `/gradeway role create` requires both `gradeway.role` and
 `gradeway.role.create`. Commands you lack the permission for are hidden from tab-completion.
 
-| Command group                    | Parent permission              |
-| -------------------------------- | ------------------------------ |
-| `/gradeway role ...`             | `gradeway.role`                |
-| `/gradeway group ...`            | `gradeway.group`               |
-| `/gradeway track ...`            | `gradeway.track`               |
-| `/gradeway player ...`           | `gradeway.player`              |
-| `/gradeway permission ...`       | `gradeway.permission`          |
+| Command group                       | Parent permission             |
+| ----------------------------------- | ----------------------------- |
+| `/gradeway role ...`                | `gradeway.role`               |
+| `/gradeway group ...`               | `gradeway.group`              |
+| `/gradeway track ...`               | `gradeway.track`              |
+| `/gradeway player ...`              | `gradeway.player`             |
+| `/gradeway permission ...`          | `gradeway.permission`         |
 | `/gradeway permission template ...` | `gradeway.permissionTemplate` |
-| `/gradeway cache ...`            | `gradeway.cache`               |
-| `/gradeway backup ...`           | `gradeway.backup`              |
+| `/gradeway cache ...`               | `gradeway.cache`              |
+| `/gradeway backup ...`              | `gradeway.backup`             |
 
 ## Base Command
 
@@ -84,9 +84,9 @@ The inspection commands show where a permission comes from. Permission arguments
 permissions the server knows about, such as permissions declared by plugins and permissions that
 were already checked at runtime.
 
-| Command                                  | Permission        | Description                                                                         |
-| ---------------------------------------- | ----------------- | ----------------------------------------------------------------------------------- |
-| `/gradeway why <player> <permission>`    | `gradeway.why`    | Shows every path through which a player has a permission.                           |
+| Command                                  | Permission        | Description                                                                           |
+| ---------------------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| `/gradeway why <player> <permission>`    | `gradeway.why`    | Shows every path through which a player has a permission.                             |
 | `/gradeway whocan <permission> [page=1]` | `gradeway.whocan` | Lists every role and player that has a permission, either directly or by inheritance. |
 
 `why` prints one line per path, for example `Steve → vip → member → template basic → essentials.home`.
@@ -99,10 +99,10 @@ per page. Clicking a player runs `/gradeway why` for that player and permission.
 
 ## Notifications
 
-| Command                     | Permission        | Description                                                         |
-| --------------------------- | ----------------- | ------------------------------------------------------------------- |
-| `/gradeway notify`          | `gradeway.notify` | Toggles in-game notifications for yourself.                         |
-| `/gradeway notify <on/off>` | `gradeway.notify` | Turns in-game notifications for yourself on or off.                 |
+| Command                     | Permission        | Description                                         |
+| --------------------------- | ----------------- | --------------------------------------------------- |
+| `/gradeway notify`          | `gradeway.notify` | Toggles in-game notifications for yourself.         |
+| `/gradeway notify <on/off>` | `gradeway.notify` | Turns in-game notifications for yourself on or off. |
 
 Only players can use this command. In-game notifications are off until a player turns them on, and
 they require the `ingame` notification driver, see [Notifications](/gradeway/admin/notifications).
@@ -144,13 +144,13 @@ extension (for example `luckperms`), see [Migrate](/gradeway/admin/migrate).
 `/gradeway permission ...` manages the raw permission nodes that can be assigned to players, roles,
 groups and permission templates.
 
-| Command                                                  | Permission                     | Description                                       |
-| -------------------------------------------------------- | ------------------------------ | ------------------------------------------------- |
-| `/gradeway permission add <value> [type=EQUALS]`         | `gradeway.permission.add`      | Creates a new permission node.                    |
-| `/gradeway permission remove <idOrValue>`                | `gradeway.permission.remove`   | Deletes a permission node. Requires confirmation. |
-| `/gradeway permission modify <idOrValue> setValue <value>` | `gradeway.permission.setValue` | Changes the value of a permission node.         |
-| `/gradeway permission modify <idOrValue> setType <type>` | `gradeway.permission.setType`  | Changes the match type of a permission node.      |
-| `/gradeway permission list`                              | `gradeway.permission.list`     | Lists all permission nodes.                       |
+| Command                                                    | Permission                     | Description                                       |
+| ---------------------------------------------------------- | ------------------------------ | ------------------------------------------------- |
+| `/gradeway permission add <value> [type=EQUALS]`           | `gradeway.permission.add`      | Creates a new permission node.                    |
+| `/gradeway permission remove <idOrValue>`                  | `gradeway.permission.remove`   | Deletes a permission node. Requires confirmation. |
+| `/gradeway permission modify <idOrValue> setValue <value>` | `gradeway.permission.setValue` | Changes the value of a permission node.           |
+| `/gradeway permission modify <idOrValue> setType <type>`   | `gradeway.permission.setType`  | Changes the match type of a permission node.      |
+| `/gradeway permission list`                                | `gradeway.permission.list`     | Lists all permission nodes.                       |
 
 `type` controls how the permission's value is matched and accepts one of:
 
@@ -226,28 +226,28 @@ additional types.
 
 ## Roles
 
-| Command                                               | Permission                 | Description                                                                 |
-| ----------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------- |
-| `/gradeway role create <name>`                        | `gradeway.role.create`     | Creates a new role.                                                         |
-| `/gradeway role delete <idOrName>`                    | `gradeway.role.delete`     | Deletes a role. Requires confirmation.                                      |
-| `/gradeway role info <idOrName>`                      | `gradeway.role.info`       | Shows weight, players, parents, children, groups, permissions and attributes. |
-| `/gradeway role modify <idOrName> setName <name>`     | `gradeway.role.setName`    | Renames a role.                                                             |
-| `/gradeway role modify <idOrName> setWeight <value>`  | `gradeway.role.setWeight`  | Sets the weight of the role.                                                |
-| `/gradeway role modify <idOrName> setDefault <isDefault>` | `gradeway.role.setDefault` | Flags or unflags the role as a default role (`true`/`false`).           |
-| `/gradeway role list`                                 | `gradeway.role.list`       | Lists all roles.                                                            |
+| Command                                                   | Permission                 | Description                                                                   |
+| --------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------- |
+| `/gradeway role create <name>`                            | `gradeway.role.create`     | Creates a new role.                                                           |
+| `/gradeway role delete <idOrName>`                        | `gradeway.role.delete`     | Deletes a role. Requires confirmation.                                        |
+| `/gradeway role info <idOrName>`                          | `gradeway.role.info`       | Shows weight, players, parents, children, groups, permissions and attributes. |
+| `/gradeway role modify <idOrName> setName <name>`         | `gradeway.role.setName`    | Renames a role.                                                               |
+| `/gradeway role modify <idOrName> setWeight <value>`      | `gradeway.role.setWeight`  | Sets the weight of the role.                                                  |
+| `/gradeway role modify <idOrName> setDefault <isDefault>` | `gradeway.role.setDefault` | Flags or unflags the role as a default role (`true`/`false`).                 |
+| `/gradeway role list`                                     | `gradeway.role.list`       | Lists all roles.                                                              |
 
 Roles also support the shared **attributes** and **permissions** sub-commands described under
 **Shared Entity Commands** above, prefixed with `/gradeway role modify <idOrName> ...`, plus the
 role hierarchy commands:
 
-| Command                                                  | Permission                      | Description                                                |
-| -------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------- |
-| `/gradeway role modify <idOrName> parents add <parent>`  | `gradeway.role.parents.add`     | Adds a parent role to inherit permissions/attributes from. |
-| `/gradeway role modify <idOrName> parents remove <parent>` | `gradeway.role.parents.remove` | Removes a parent role.                                    |
-| `/gradeway role modify <idOrName> parents list`          | `gradeway.role.parents.list`    | Lists the parents of the role.                             |
-| `/gradeway role modify <idOrName> children add <child>`  | `gradeway.role.children.add`    | Adds a child role.                                         |
-| `/gradeway role modify <idOrName> children remove <child>` | `gradeway.role.children.remove` | Removes a child role.                                    |
-| `/gradeway role modify <idOrName> children list`         | `gradeway.role.children.list`   | Lists the children of the role.                            |
+| Command                                                    | Permission                      | Description                                                |
+| ---------------------------------------------------------- | ------------------------------- | ---------------------------------------------------------- |
+| `/gradeway role modify <idOrName> parents add <parent>`    | `gradeway.role.parents.add`     | Adds a parent role to inherit permissions/attributes from. |
+| `/gradeway role modify <idOrName> parents remove <parent>` | `gradeway.role.parents.remove`  | Removes a parent role.                                     |
+| `/gradeway role modify <idOrName> parents list`            | `gradeway.role.parents.list`    | Lists the parents of the role.                             |
+| `/gradeway role modify <idOrName> children add <child>`    | `gradeway.role.children.add`    | Adds a child role.                                         |
+| `/gradeway role modify <idOrName> children remove <child>` | `gradeway.role.children.remove` | Removes a child role.                                      |
+| `/gradeway role modify <idOrName> children list`           | `gradeway.role.children.list`   | Lists the children of the role.                            |
 
 <Callout type="idea">
   Adding a parent to role A is equivalent to adding role A as a child on the parent role - both
@@ -259,11 +259,11 @@ role hierarchy commands:
 The default role is assigned to players automatically when they join, see
 [Configuration](/gradeway/admin/configure#default-role) for when exactly that happens.
 
-| Command                               | Permission                    | Description                                                                |
-| ------------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
-| `/gradeway role default`              | `gradeway.role.default`       | Shows the current default role.                                            |
-| `/gradeway role default set <idOrName>` | `gradeway.role.default.set` | Makes the role the only default role, unflagging every other default role. |
-| `/gradeway role default clear`        | `gradeway.role.default.clear` | Unflags every default role, so no role is assigned automatically anymore.  |
+| Command                                 | Permission                    | Description                                                                |
+| --------------------------------------- | ----------------------------- | -------------------------------------------------------------------------- |
+| `/gradeway role default`                | `gradeway.role.default`       | Shows the current default role.                                            |
+| `/gradeway role default set <idOrName>` | `gradeway.role.default.set`   | Makes the role the only default role, unflagging every other default role. |
+| `/gradeway role default clear`          | `gradeway.role.default.clear` | Unflags every default role, so no role is assigned automatically anymore.  |
 
 <Callout type="idea">
   `setDefault` only flags a single role and leaves other default roles untouched. If more than one
@@ -275,17 +275,17 @@ The default role is assigned to players automatically when they join, see
 
 Groups bundle roles together so multiple players can share the same set of roles at once.
 
-| Command                                                      | Permission                       | Description                                                    |
-| ------------------------------------------------------------ | -------------------------------- | -------------------------------------------------------------- |
-| `/gradeway group create <name> [defaultWeight=-1]`           | `gradeway.group.create`          | Creates a new group.                                           |
-| `/gradeway group delete <idOrName>`                          | `gradeway.group.delete`          | Deletes a group. Requires confirmation.                        |
-| `/gradeway group info <idOrName>`                            | `gradeway.group.info`            | Shows the default weight, roles and permissions of a group.    |
-| `/gradeway group modify <idOrName> setName <name>`           | `gradeway.group.setName`         | Renames a group.                                               |
+| Command                                                              | Permission                       | Description                                                    |
+| -------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------- |
+| `/gradeway group create <name> [defaultWeight=-1]`                   | `gradeway.group.create`          | Creates a new group.                                           |
+| `/gradeway group delete <idOrName>`                                  | `gradeway.group.delete`          | Deletes a group. Requires confirmation.                        |
+| `/gradeway group info <idOrName>`                                    | `gradeway.group.info`            | Shows the default weight, roles and permissions of a group.    |
+| `/gradeway group modify <idOrName> setName <name>`                   | `gradeway.group.setName`         | Renames a group.                                               |
 | `/gradeway group modify <idOrName> setDefaultWeight <defaultWeight>` | `gradeway.group.setDefaltWeight` | Sets the default weight new members of the group are assigned. |
-| `/gradeway group modify <idOrName> roles add <role>`         | `gradeway.group.roles.add`       | Adds a role to the group.                                      |
-| `/gradeway group modify <idOrName> roles remove <role>`      | `gradeway.group.roles.remove`    | Removes a role from the group.                                 |
-| `/gradeway group modify <idOrName> roles list`               | `gradeway.group.roles.list`      | Lists the roles of the group.                                  |
-| `/gradeway group list`                                       | `gradeway.group.list`            | Lists all groups.                                              |
+| `/gradeway group modify <idOrName> roles add <role>`                 | `gradeway.group.roles.add`       | Adds a role to the group.                                      |
+| `/gradeway group modify <idOrName> roles remove <role>`              | `gradeway.group.roles.remove`    | Removes a role from the group.                                 |
+| `/gradeway group modify <idOrName> roles list`                       | `gradeway.group.roles.list`      | Lists the roles of the group.                                  |
+| `/gradeway group list`                                               | `gradeway.group.list`            | Lists all groups.                                              |
 
 Groups also support the shared **permissions** sub-commands described under **Shared Entity
 Commands** above, prefixed with `/gradeway group modify <idOrName> ...`.
@@ -296,19 +296,19 @@ A track is an ordered ladder of roles (its **stages**), for example `member` →
 Promoting a player moves them one stage up the track, demoting moves them one stage down. See
 [Tracks](#how-tracks-work) below for how the player's position is determined.
 
-| Command                                                         | Permission                     | Description                                                     |
-| --------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| `/gradeway track create <slug>`                                 | `gradeway.track.create`        | Creates a new track. The slug can be up to 20 characters long.  |
-| `/gradeway track delete <idOrSlug>`                             | `gradeway.track.delete`        | Deletes a track. Requires confirmation.                         |
-| `/gradeway track info <idOrSlug>`                               | `gradeway.track.info`          | Shows the stages of a track in order.                           |
-| `/gradeway track modify <idOrSlug> setSlug <slug>`              | `gradeway.track.setSlug`       | Changes the slug of a track.                                    |
-| `/gradeway track modify <idOrSlug> stages add <role>`           | `gradeway.track.stages.add`    | Appends a role as a new stage at the end of the track.          |
-| `/gradeway track modify <idOrSlug> stages remove <stage>`       | `gradeway.track.stages.remove` | Removes a stage from the track.                                 |
-| `/gradeway track modify <idOrSlug> stages move <stage> <position>` | `gradeway.track.stages.move` | Moves a stage to the given position, starting at `1`.          |
-| `/gradeway track modify <idOrSlug> stages list`                 | `gradeway.track.stages.list`   | Lists the stages of the track.                                  |
-| `/gradeway track promote <player> <idOrSlug>`                   | `gradeway.track.promote`       | Promotes a player to the next stage of the track.               |
-| `/gradeway track demote <player> <idOrSlug>`                    | `gradeway.track.demote`        | Demotes a player to the previous stage of the track.            |
-| `/gradeway track list`                                          | `gradeway.track.list`          | Lists all tracks.                                               |
+| Command                                                            | Permission                     | Description                                                    |
+| ------------------------------------------------------------------ | ------------------------------ | -------------------------------------------------------------- |
+| `/gradeway track create <slug>`                                    | `gradeway.track.create`        | Creates a new track. The slug can be up to 20 characters long. |
+| `/gradeway track delete <idOrSlug>`                                | `gradeway.track.delete`        | Deletes a track. Requires confirmation.                        |
+| `/gradeway track info <idOrSlug>`                                  | `gradeway.track.info`          | Shows the stages of a track in order.                          |
+| `/gradeway track modify <idOrSlug> setSlug <slug>`                 | `gradeway.track.setSlug`       | Changes the slug of a track.                                   |
+| `/gradeway track modify <idOrSlug> stages add <role>`              | `gradeway.track.stages.add`    | Appends a role as a new stage at the end of the track.         |
+| `/gradeway track modify <idOrSlug> stages remove <stage>`          | `gradeway.track.stages.remove` | Removes a stage from the track.                                |
+| `/gradeway track modify <idOrSlug> stages move <stage> <position>` | `gradeway.track.stages.move`   | Moves a stage to the given position, starting at `1`.          |
+| `/gradeway track modify <idOrSlug> stages list`                    | `gradeway.track.stages.list`   | Lists the stages of the track.                                 |
+| `/gradeway track promote <player> <idOrSlug>`                      | `gradeway.track.promote`       | Promotes a player to the next stage of the track.              |
+| `/gradeway track demote <player> <idOrSlug>`                       | `gradeway.track.demote`        | Demotes a player to the previous stage of the track.           |
+| `/gradeway track list`                                             | `gradeway.track.list`          | Lists all tracks.                                              |
 
 ### How tracks work
 
@@ -324,13 +324,13 @@ Promoting a player moves them one stage up the track, demoting moves them one st
 
 Players are created automatically the first time they join a server or proxy running Gradeway.
 
-| Command                                                | Permission                  | Description                                                     |
-| ------------------------------------------------------ | --------------------------- | --------------------------------------------------------------- |
-| `/gradeway player create <id> <name>`                  | `gradeway.player.create`    | Creates a player entity for an existing UUID.                   |
-| `/gradeway player delete <idOrName>`                   | `gradeway.player.delete`    | Deletes a player entity. Requires confirmation.                 |
+| Command                                                | Permission                  | Description                                                    |
+| ------------------------------------------------------ | --------------------------- | -------------------------------------------------------------- |
+| `/gradeway player create <id> <name>`                  | `gradeway.player.create`    | Creates a player entity for an existing UUID.                  |
+| `/gradeway player delete <idOrName>`                   | `gradeway.player.delete`    | Deletes a player entity. Requires confirmation.                |
 | `/gradeway player info <idOrName>`                     | `gradeway.player.info`      | Shows primary role, weight, roles, permissions and attributes. |
-| `/gradeway player modify <idOrName> setWeight <value>` | `gradeway.player.setWeight` | Sets the weight of the player.                                  |
-| `/gradeway player list`                                | `gradeway.player.list`      | Lists all players.                                              |
+| `/gradeway player modify <idOrName> setWeight <value>` | `gradeway.player.setWeight` | Sets the weight of the player.                                 |
+| `/gradeway player list`                                | `gradeway.player.list`      | Lists all players.                                             |
 
 Players also support the shared **attributes** and **permissions** sub-commands described under
 **Shared Entity Commands** above, prefixed with `/gradeway player modify <idOrName> ...`, plus

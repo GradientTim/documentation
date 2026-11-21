@@ -1,0 +1,120 @@
+---
+title: Usage
+description: A guide on how to register versions, pick a default and mount the versioned API.
+icon: File
+---
+
+## Registering versions
+
+`versioning()` takes the versions as an object of `Hono` apps and returns a new `Hono` app that serves all of them:
+
+```ts title="app.ts"
+import { Hono } from 'hono'
+import { versioning } from '@gradienttim/hono-versioning'
+
+const v1 = new Hono().get('/users', (c) => c.json([{ name: 'Ada' }]))
+const v2 = new Hono()
+  .get('/users', (c) => c.json({ data: [{ name: 'Ada' }], total: 1 }))
+  .get('/users/:id', (c) => c.json({ id: c.req.param('id') }))
+
+const app = versioning({
+  versions: { v1, v2 },
+  defaultVersion: 'v2',
+})
+```
+
+| Option           | Description                                                                            | Default           |
+| ---------------- | -------------------------------------------------------------------------------------- | ----------------- |
+| `versions`       | The version apps, keyed by version.                                                    | required          |
+| `defaultVersion` | The version used when a request doesn't name one.                                      | required          |
+| `strategy`       | How the version is read from a request. See [strategies](/hono-versioning/strategies). | `{ type: 'uri' }` |
+
+<Callout type="warn">
+  `defaultVersion` must be one of the keys in `versions`. TypeScript rejects anything else, and at runtime
+  `versioning()` throws `Version '<name>' cannot be used as default as it is not registered.`
+</Callout>
+
+## Version keys
+
+Version keys are used **exactly as given**. Nothing is added or stripped, so the key decides what clients send:
+
+| Key            | URI strategy        | Header / query strategy     |
+| -------------- | ------------------- | --------------------------- |
+| `v1`           | `/v1/users`         | `X-API-Version: v1`         |
+| `1`            | `/1/users`          | `X-API-Version: 1`          |
+| `'2024-06-01'` | `/2024-06-01/users` | `X-API-Version: 2024-06-01` |
+
+Date-based versions (like Stripe's API) work the same way:
+
+```ts title="app.ts"
+const legacy = new Hono().get('/me', (c) => c.json({ name: 'Ada Lovelace' }))
+const current = new Hono().get('/me', (c) => c.json({ firstName: 'Ada', lastName: 'Lovelace' }))
+
+const app = versioning({
+  versions: { '2024-06-01': legacy, '2025-01-15': current },
+  defaultVersion: '2025-01-15',
+})
+```
+
+<Callout type="idea">
+  Matching is exact: with a `v1` key, a request for `1` or `V1` is an unknown version. Header
+  **names** are case-insensitive as usual, header **values** are not.
+</Callout>
+
+## Version apps
+
+Each version is a regular Hono app. Middleware, `onError` and `notFound` registered on it only apply to that version:
+
+```ts title="app.ts"
+const v1 = new Hono()
+  .use(async (c, next) => {
+    await next()
+    c.header('Deprecation', 'true')
+  })
+  .get('/items', (c) => c.json(['a', 'b']))
+
+v1.notFound((c) => c.json({ error: 'not_found', version: 'v1' }, 404))
+
+const v2 = new Hono().get('/items', (c) => c.json({ items: ['a', 'b', 'c'] }))
+
+const app = versioning({ versions: { v1, v2 }, defaultVersion: 'v2' })
+```
+
+Bindings (`c.env`) and the execution context (`c.executionCtx`, e.g. on Cloudflare Workers) are passed through to
+the version apps.
+
+## Hono options
+
+The second argument of `versioning()` takes the same options as `new Hono(...)` and applies them to the top-level
+app it creates:
+
+```ts title="app.ts"
+const app = versioning({ versions: { v1, v2 }, defaultVersion: 'v2' }, { strict: false })
+```
+
+<Callout type="warn">
+  The options only apply to the top-level app. If the routing of a version depends on them (e.g.
+  `strict`), pass them to that version's `new Hono(...)` too.
+</Callout>
+
+## Mounting
+
+The returned app is a normal Hono app, so it can be mounted inside a bigger app with `route()`. Middleware on the
+outer app runs for every version:
+
+```ts title="app.ts"
+import { logger } from 'hono/logger'
+
+const api = versioning({ versions: { v1, v2 }, defaultVersion: 'v2' })
+
+const app = new Hono()
+  .use(logger())
+  .get('/health', (c) => c.text('ok'))
+  .route('/api', api)
+
+// GET /health        -> ok
+// GET /api/v1/items  -> v1
+// GET /api/items     -> v2 (default version)
+```
+
+The [typed client](/hono-versioning/client) follows the mount path too, e.g. `client.api.v1.items.$get()`.

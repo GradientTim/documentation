@@ -29,12 +29,13 @@ written to a temporary file that is only renamed once it's complete, so an expor
 halfway never leaves a broken archive behind.
 
 <Callout type="idea">
-  Exporting doesn't touch your existing data at all, it's safe to run at any time, including
-  before a [migration](/gradeway/admin/migrate) or a risky bulk change.
+  Exporting doesn't touch your existing data at all, it's safe to run at any time, including before
+  a [migration](/gradeway/admin/migrate) or a risky bulk change.
 </Callout>
 
 <Callout type="tip">
-  Alternatively, you can create a database dump directly in your database and restore it directly back into the database.
+  Alternatively, you can create a database dump directly in your database and restore it directly
+  back into the database.
 </Callout>
 
 ## Importing
@@ -51,8 +52,8 @@ named it if you copied one in from elsewhere).
 <Callout type="warn">
   By default, importing **wipes all existing Gradeway data** before restoring the archive, it's a
   full replace, not a merge. Set `wipe=false` to skip the wipe and layer the archive's data on top
-  of what's already there instead, existing rows with matching IDs are overwritten and anything
-  else is left untouched.
+  of what's already there instead, existing rows with matching IDs are overwritten and anything else
+  is left untouched.
 </Callout>
 
 Every server or proxy sharing a database (or connected over [messaging](/gradeway/admin/messaging))
